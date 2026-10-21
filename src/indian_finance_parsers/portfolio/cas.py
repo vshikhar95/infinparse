@@ -1,6 +1,7 @@
 """CAMS/KFintech CAS PDF -> mutual fund holdings. Needs the `cas` extra (casparser)."""
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 from indian_finance_parsers.models import Holding
 
@@ -29,5 +30,11 @@ def holdings_from_cas(data: dict, owners: dict) -> list[Holding]:
 def parse(path, owners: dict | None = None, password: str | None = None) -> list[Holding]:
     """owners: {"own": [scheme-name substrings], "default": owner for every other scheme}."""
     import casparser
-    data = casparser.read_cas_pdf(str(path), password).model_dump()
+    from casparser.exceptions import IncorrectPasswordError
+    try:
+        data = casparser.read_cas_pdf(str(path), password).model_dump()
+    except IncorrectPasswordError:  # chained from the PDF library, whose message carries the full path
+        data = None
+    if data is None:
+        raise ValueError(f"{Path(path).name}: wrong or missing password")
     return holdings_from_cas(data, owners or DEFAULT_OWNERS)

@@ -74,3 +74,30 @@ def test_relationship_words_match_whole_words_only(repo):
     assert check(repo).returncode == 0
     commit(repo, "a.py", "# my dad's card\n")
     assert check(repo).returncode == 1
+
+
+def test_unreadable_denylist_fails_loudly(repo):
+    commit(repo, "a.py", "x = 1\n")
+    r = check(repo, "no-such-denylist.txt")
+    assert r.returncode == 2 and "denylist" in r.stderr
+
+
+def test_relative_denylist_resolves_from_the_callers_directory(repo, tmp_path):
+    commit(repo, "a.py", "# paid Zed back\n")
+    (tmp_path / "deny.txt").write_text("zed\n")
+    r = subprocess.run(["bash", str(SCRIPT), "../deny.txt"], cwd=repo, capture_output=True, text=True)
+    assert r.returncode == 1
+
+
+def test_filename_with_colon_is_rejected(repo):
+    commit(repo, "a:b.py", "x = 1\n")
+    r = check(repo)
+    assert r.returncode == 1 and "unscannable file name" in r.stdout
+
+
+def test_binary_files_are_rejected(repo):
+    (repo / "orders.zip").write_bytes(b"PK\x03\x04\x00someone@gmail.com\x00")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-qm", "c")
+    r = check(repo)
+    assert r.returncode == 1 and "orders.zip" in r.stdout and "binary" in r.stdout

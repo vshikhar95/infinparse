@@ -3,8 +3,9 @@
 Parse Indian bank, card, broker and store statements into plain Python records.
 
 Each parser takes one file you downloaded or were emailed (a statement PDF, an Excel or CSV export, a saved web page,
-a saved receipt email) and returns a list of dataclasses. It also checks the rows against the file's own totals or
-running balances where the file has them, and raises when they don't match.
+a saved receipt email) and returns a list of dataclasses. Where a file prints its own totals or row counts, the
+parser checks the rows against them and raises `ValueError` on a mismatch. Running balances on bank statements are
+checked by a separate helper, `checks.check_balance_chain`, which you call on the parsed rows (see below).
 
 ## Supported sources
 
@@ -53,7 +54,19 @@ with TemporaryDirectory() as tmp:
     info = meta(hdfc, pdf)        # {"bin4": "..."}: which card this statement is for
 ```
 
-To see a file's structure without seeing its contents: `python -m indian_finance_parsers.peek FILE`.
+Bank statements carry a running balance on every row. Check that the rows chain before you trust them:
+
+```python
+from indian_finance_parsers.checks import check_balance_chain, order_by_balance
+
+rows = adapter("importers", "sbi_bank").parse(xlsx)
+opening = check_balance_chain(rows)   # raises ValueError at the first row that doesn't chain; None if no balances
+```
+
+`order_by_balance(rows)` re-orders same-day rows that a bank printed out of order. `icici_bank` already applies it.
+
+To see a file's structure without seeing its contents: `python -m indian_finance_parsers.peek FILE` (needs the
+`excel` extra).
 
 ## Models
 

@@ -4,15 +4,34 @@
 #   Generic patterns always run: email addresses (noreply ones allowed), /Users/ or /home/ paths, 10+ digit runs
 #   (except test-card 4111…, 0000…, 1234567… and one-repeated-digit runs), and family-relationship words.
 #   DENYLIST: optional file of terms to reject (one per line, case-insensitive) — keep it outside this repo.
+# Binary files and file names with ':' or a tab can't be scanned, so they fail the gate too.
 # Prints "file:line: kind" (or "history <commit> file: kind") per hit, never the matched text. Exits 1 on any hit.
 set -euo pipefail
+deny=/dev/null
+if [ $# -gt 0 ]; then
+  [ -f "$1" ] && [ -r "$1" ] || { echo "pii_check: denylist $1 is not a readable file" >&2; exit 2; }
+  deny="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"  # resolved before the cd below
+fi
 cd "$(git rev-parse --show-toplevel)"
-deny=${1:-/dev/null}
 # this script and its test hold the patterns themselves
 self='^(scripts/pii_check\.sh|tests/test_pii_check\.py)$'
 
+# files the line scan below can't read: names it can't split, and binary files (zips, spreadsheets, PDFs)
+unscannable=0
+names=$( { git ls-files; git log --all --format= --name-only; } | sort -u)
+if bad=$(printf '%s\n' "$names" | grep -E ':|'$'\t'); then
+  printf '%s: unscannable file name\n' $bad; unscannable=1
+fi
+text=$(git grep -I -l -e '' -- . || true)
+for f in $(git ls-files); do
+  [ -s "$f" ] && ! printf '%s\n' "$text" | grep -qxF "$f" && { echo "$f: binary file (not scannable)"; unscannable=1; }
+done
+if bin=$(git log --all --numstat --format= | awk -F'\t' '$1 == "-" { print $3 }' | sort -u | grep .); then
+  printf 'history %s: binary file (not scannable)\n' $bin; unscannable=1
+fi
+
 {
-  git grep -nI -e '' -- . | sed -E 's/^([^:]*):([0-9]*):/\1:\2:\t/'
+  { git grep -nI -e '' -- . || [ $? = 1 ]; } | sed -E 's/^([^:]*):([0-9]*):/\1:\2:\t/'
   git log -p --all --no-color | awk -v self="$self" '
     /^commit [0-9a-f]{40}/ { c = substr($2, 1, 7); f = ""; next }
     /^diff --git / { f = substr($4, 3); next }
@@ -46,4 +65,4 @@ self='^(scripts/pii_check\.sh|tests/test_pii_check\.py)$'
     if (kind == "") for (t in terms) if (index(low, t)) { kind = "denylist term"; break }
     if (kind != "") { print loc " " kind; hits++ }
   }
-  END { exit hits > 0 }' | sed -E 's/:[[:space:]]+/: /'
+  END { exit hits > 0 }' | sed -E 's/:[[:space:]]+/: /' && [ $unscannable = 0 ]

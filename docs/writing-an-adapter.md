@@ -36,7 +36,7 @@ info = meta(mod, "statement.csv")             # {} when the module has no meta()
 
 1. **Add the module** under `src/indian_finance_parsers/<importers|purchases|portfolio>/`.
 2. **Add a synthetic fixture.** Look at your real file's structure with
-   `python -m indian_finance_parsers.peek path/to/real-file.csv`, which prints it with every letter and digit masked.
+   `python -m indian_finance_parsers.peek path/to/real-file.csv` (needs the `excel` extra), which prints it with every letter and digit masked.
    Then write a small fixture with that structure and invented values (shop names like `TESTMART`, card numbers
    starting `4111`, account numbers of zeros). Never commit a real statement, not even a redacted one.
    For PDFs, test the function that turns extracted words or lines into rows, and store those words or lines as JSON

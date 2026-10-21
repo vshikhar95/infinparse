@@ -50,3 +50,21 @@ def test_wrong_password_office(tmp_path):
 def test_unsupported_suffix(tmp_path):
     with pytest.raises(ValueError, match="can't decrypt .csv"):
         decrypted(tmp_path / "a.csv", "pw", tmp_path)
+
+
+def test_corrupt_pdf_names_only_the_file(tmp_path):
+    bad = tmp_path / "secret_dir" / "statement.pdf"
+    bad.parent.mkdir()
+    bad.write_bytes(b"%PDF-1.7 truncated")
+    with pytest.raises(ValueError, match="statement.pdf: not a readable") as e:
+        decrypted(bad, "pw", tmp_path)
+    assert "secret_dir" not in str(e.value) and e.value.__context__ is None
+
+
+def test_corrupt_office_file_names_only_the_file(tmp_path):
+    bad = tmp_path / "secret_dir" / "statement.xlsx"
+    bad.parent.mkdir()
+    bad.write_bytes(b"not an office file")
+    with pytest.raises(ValueError, match="statement.xlsx: not a readable") as e:
+        decrypted(bad, "pw", tmp_path)
+    assert "secret_dir" not in str(e.value) and e.value.__context__ is None

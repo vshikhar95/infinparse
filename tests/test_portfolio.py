@@ -59,3 +59,16 @@ def test_cas_password_argument(monkeypatch):
     monkeypatch.delenv("CAS_PASSWORD", raising=False)
     cas.parse("cas.pdf", password="secret-from-caller")
     assert seen["pw"] == "secret-from-caller"
+
+
+def test_cas_wrong_password_is_a_clean_value_error(monkeypatch):
+    import casparser
+    from casparser.exceptions import IncorrectPasswordError
+
+    def boom(path, password):
+        raise IncorrectPasswordError(f"bad password for {path}")
+    monkeypatch.setattr(casparser, "read_cas_pdf", boom)
+    import pytest
+    with pytest.raises(ValueError, match="cas.pdf: wrong or missing password") as e:
+        cas.parse("/secret_dir/cas.pdf", password="wrong")
+    assert "secret_dir" not in str(e.value) and e.value.__context__ is None
