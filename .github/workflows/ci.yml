@@ -14,3 +14,11 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: uv sync --all-extras --dev
       - run: uv run pytest -q -W error
+
+  pii:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # the gate scans all of history, not just the tip
+      - run: scripts/pii_check.sh
