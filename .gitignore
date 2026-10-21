@@ -1,0 +1,13 @@
+# real statements never belong here: fixtures are synthetic and checked in explicitly
+inbox/
+data/
+.env
+*.pdf
+*.PDF
+*.xls*
+__pycache__/
+.venv/
+dist/
+.DS_Store
+.claude/
+.superpowers/
