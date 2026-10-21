@@ -1,0 +1,50 @@
+# Example config for a pipeline built on indian-finance-parsers. The package itself reads no config:
+# a pipeline reads a file like this, matches each incoming file to an entry, and calls
+# indian_finance_parsers.adapter(kind, name).parse(path, ...). Every value here is invented.
+#
+# importer / parser = a built-in name ("hdfc_card") or a dotted path to your own module ("mypkg.mybank").
+# account = the ledger account the rows go to; {placeholders} come from the importer's meta(path).
+# password_env = name of an environment variable holding the file's password (your pipeline reads it and
+#                passes it to indian_finance_parsers.decrypt.decrypted; the parsers never read the environment).
+
+# ---- Statements: money movements -> list[Txn]
+[[source]]
+glob = "optransactionhistory*.xls"
+importer = "icici_bank"
+account = "ICICI Savings"
+
+[[source]]
+glob = "*_retail_*_norm.pdf"
+importer = "icici_card_pdf"
+account = "ICICI Card {product}"
+password_env = "ICICI_CARD_PASSWORD"
+
+[[source]]
+glob = "accountstatement_*.xlsx"
+importer = "sbi_bank"
+account = "SBI Savings"
+password_env = "SBI_BANK_PASSWORD"
+
+# ---- Purchase histories: what was bought -> list[Purchase]
+# match / window_days are pipeline settings for linking purchases to card charges; the parsers ignore them.
+[[purchase_source]]
+glob = "Your Orders*.zip"
+parser = "amazon"
+match = ["AMAZON"]
+window_days = [-1, 7]
+
+# ---- Portfolio files: what is owned -> list[Holding]
+# kind -> module: cas, zerodha_holdings / zerodha_tradebook -> zerodha, shriram_fd -> shriram, sgb, sbi_ppf
+[[portfolio_source]]
+glob = "*_cp*.pdf"
+kind = "cas"
+password_env = "CAS_PASSWORD"
+
+[[portfolio_source]]
+glob = "holdings-*.xlsx"
+kind = "zerodha_holdings"
+
+# Owner labels for CAS funds: schemes whose names contain any of these substrings are "own";
+# the pipeline passes {"own": own, "default": ...} to portfolio.cas.parse(owners=...).
+[portfolio]
+own = []
