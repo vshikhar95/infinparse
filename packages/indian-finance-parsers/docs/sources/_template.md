@@ -1,7 +1,7 @@
 # <Source name>
 
 ## Source and parser
-Institution or store, the parser (`importers/<name>`, `purchases/<name>` or `portfolio/<name>`) and the install extra it needs.
+Institution or store, the parser name and the install extra it needs.
 
 ## Official site
 A link to the institution's front page or help page, plus the menu path to the export (for example

@@ -4,8 +4,8 @@ from pathlib import Path
 from indian_finance_parsers import adapter
 
 EXAMPLE = tomllib.loads((Path(__file__).parent.parent / "examples" / "sources.example.toml").read_text())
-SECTIONS = {"source": ("importers", "importer"), "purchase_source": ("purchases", "parser"),
-            "portfolio_source": ("portfolio", "parser"), "trade_source": ("trades", "parser")}
+SECTIONS = {"source": ("importers", "importer"), "portfolio_source": ("portfolio", "parser"),
+            "trade_source": ("trades", "parser")}
 
 
 def test_every_section_is_present():

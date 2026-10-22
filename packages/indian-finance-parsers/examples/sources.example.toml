@@ -25,14 +25,6 @@ importer = "sbi_bank"
 account = "SBI Savings"
 password_env = "SBI_BANK_PASSWORD"
 
-# ---- Purchase histories: what was bought -> list[Purchase]
-# match / window_days are pipeline settings for linking purchases to card charges; the parsers ignore them.
-[[purchase_source]]
-glob = "Your Orders*.zip"
-parser = "amazon"
-match = ["AMAZON"]
-window_days = [-1, 7]
-
 # ---- Portfolio files: what is owned -> list[Holding]. parser = module in indian_finance_parsers.portfolio.
 # Whose money it is (own, joint, someone else's) is pipeline config, not parser input: tag rows after parsing.
 [[portfolio_source]]

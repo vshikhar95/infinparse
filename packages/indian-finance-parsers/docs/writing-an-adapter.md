@@ -7,11 +7,10 @@ An adapter is one Python module that turns one kind of file into records from `i
 | Kind | Function | Returns |
 |---|---|---|
 | Statement importer | `parse(path)`, and optionally `meta(path) -> dict[str, str]` | `list[Txn]` |
-| Purchase parser | `parse(path)` | `list[Purchase]` |
 | Portfolio parser | `parse(path)` | `list[Holding]` |
 | Trade parser | `parse(path)` | `list[Trade]` |
 
-The folder an adapter lives in (`importers/`, `purchases/`, `portfolio/`, `trades/`) decides which record it returns.
+The folder an adapter lives in (`importers/`, `portfolio/`, `trades/`) decides which record it returns.
 One module per document: one institution's one export (Zerodha's holdings sheet, tradebook and funds ledger are three
 modules). Extra keyword arguments are for what the file itself can't supply and the parser can't do without, such as
 a password the parsing library needs (`cas.parse(path, password=)`).
@@ -47,7 +46,7 @@ info = meta(mod, "statement.csv")             # {} when the module has no meta()
 
 ## Contributing one upstream
 
-1. **Add the module** under `src/indian_finance_parsers/<importers|purchases|portfolio>/`.
+1. **Add the module** under `src/indian_finance_parsers/<importers|portfolio|trades>/`.
 2. **Add a synthetic fixture.** Look at your real file's structure with
    `python -m indian_finance_parsers.peek path/to/real-file.csv` (needs the `excel` extra), which prints it with every letter and digit masked.
    Then write a small fixture with that structure and invented values (shop names like `TESTMART`, card numbers

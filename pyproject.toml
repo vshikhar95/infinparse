@@ -1,30 +1,15 @@
-[project]
-name = "indian-finance-parsers"
-version = "0.1.0"
-description = "Parse Indian bank, card, broker and store statements into plain Python records."
-readme = "README.md"
-license = "MIT"
-license-files = ["LICENSE"]
-requires-python = ">=3.11"
-dependencies = ["pdfplumber>=0.11.10"]
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "Operating System :: OS Independent",
-    "Topic :: Office/Business :: Financial",
-]
+# infinparse: a uv workspace of independent parser packages (see packages/). Each package builds and releases on its
+# own; this root only wires them together for development.
+[tool.uv.workspace]
+members = ["packages/*"]
 
-[project.optional-dependencies]
-excel = ["pandas>=2.2", "xlrd>=2.0.2", "openpyxl>=3.1.5"]
-cas = ["casparser>=1.4.1"]
-decrypt = ["pikepdf>=10.17.0", "msoffcrypto-tool>=6.0.0"]
-all = ["indian-finance-parsers[excel,cas,decrypt]"]
+[tool.uv.sources]
+indian-finance-parsers = { workspace = true }
+purchase-history-parsers = { workspace = true }
 
 [dependency-groups]
-dev = ["pytest>=9.1.1", "indian-finance-parsers[all]"]  # tests cover every adapter, so plain `uv run pytest` gets all extras
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+dev = ["pytest>=9.1.1", "indian-finance-parsers[all]", "purchase-history-parsers"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "packages/indian-finance-parsers/tests", "packages/purchase-history-parsers/tests"]
+addopts = ["--import-mode=importlib"]  # the packages' test files share names (test_docs.py)

@@ -3,7 +3,7 @@ from importlib import import_module
 
 
 def adapter(kind: str, name: str):
-    """kind: "importers" | "purchases" | "portfolio". A bare name is a built-in; a dotted path ("mypkg.mybank")
+    """kind: "importers" | "portfolio" | "trades". A bare name is a built-in; a dotted path ("mypkg.mybank")
     is imported as-is, so your own adapters need no registration."""
     return import_module(name if "." in name else f"indian_finance_parsers.{kind}.{name}")
 
