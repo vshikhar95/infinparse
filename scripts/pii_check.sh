@@ -9,7 +9,7 @@
 set -euo pipefail
 deny=/dev/null
 if [ $# -gt 0 ]; then
-  [ -f "$1" ] && [ -r "$1" ] || { echo "pii_check: denylist $1 is not a readable file" >&2; exit 2; }
+  if [ ! -f "$1" ] || [ ! -r "$1" ]; then echo "pii_check: denylist $1 is not a readable file" >&2; exit 2; fi
   deny="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"  # resolved before the cd below
 fi
 cd "$(git rev-parse --show-toplevel)"
