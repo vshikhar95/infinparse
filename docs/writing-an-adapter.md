@@ -8,11 +8,24 @@ An adapter is one Python module that turns one kind of file into records from `i
 |---|---|---|
 | Statement importer | `parse(path)`, and optionally `meta(path) -> dict[str, str]` | `list[Txn]` |
 | Purchase parser | `parse(path)` | `list[Purchase]` |
-| Portfolio parser | `parse(path, **opts)` (for example `owner=`, `password=`, `account=`) | `list[Holding]` |
+| Portfolio parser | `parse(path)` | `list[Holding]` |
+| Trade parser | `parse(path)` | `list[Trade]` |
+
+The folder an adapter lives in (`importers/`, `purchases/`, `portfolio/`, `trades/`) decides which record it returns.
+One module per document: one institution's one export (Zerodha's holdings sheet, tradebook and funds ledger are three
+modules). Extra keyword arguments are for what the file itself can't supply and the parser can't do without, such as
+a password the parsing library needs (`cas.parse(path, password=)`).
 
 Rules:
+- **Report the document, don't judge it.** Return what the file says. Checking the file against itself (totals,
+  running balances, row counts) belongs here; anything that needs today's date, the network, or knowledge about the
+  user (whose money it is, what the account is called, whether a deposit has matured, today's price) belongs to the
+  caller.
 - **Pure.** `parse()` and `meta()` read only the file they are given. No config files, environment variables,
-  databases or network calls; every option comes in as an argument.
+  databases or network calls.
+- **Identifiers from the file, names from the caller.** Fill `account` (or `meta()` placeholders) with identifiers the
+  file prints: folio, client id, deposit number, card digits. Never invent an account name; leave `""` when the file
+  has none.
 - **Reconcile or raise.** If the file carries totals or running balances, check the rows against them and raise
   `ValueError` when they disagree. A parser that silently drops a row is worse than one that fails.
 - **Heavy dependencies are imported inside the function** that needs them (pandas, openpyxl, casparser), so a user

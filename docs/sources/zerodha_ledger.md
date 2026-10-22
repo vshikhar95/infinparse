@@ -1,8 +1,7 @@
 # Zerodha funds ledger
 
 ## Source and parser
-Zerodha trading account funds ledger, CSV. Parser `importers/zerodha_ledger` (it re-exports
-`portfolio.zerodha.ledger`), base install.
+Zerodha trading account funds ledger, CSV. Parser `importers/zerodha_ledger`, base install.
 
 ## Official site
 <https://console.zerodha.com/>. Funds → Statement → choose a date range → download CSV (XLSX is also offered;
@@ -23,6 +22,6 @@ are not returned. `meta()` returns `{}`.
 
 ## Assumptions and quirks
 - Columns: `particulars, posting_date, cost_center, voucher_type, debit, credit, net_balance`; dates are ISO.
-- The first row is `Opening Balance` (net balance only). If a trailing `Closing Balance` row exists, it must equal
-  the last row's balance, and every row's balance must chain from the one before it; otherwise `ValueError` is raised.
-- `portfolio.zerodha.opening(path)` and `closing(path)` expose those two balances.
+- The first row is `Opening Balance` (net balance only). The rows must chain from it, every row's balance from the
+  one before, and a trailing `Closing Balance` row (if present) must equal the last row's balance; otherwise
+  `ValueError` is raised.

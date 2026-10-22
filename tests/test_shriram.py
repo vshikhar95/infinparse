@@ -1,4 +1,4 @@
-"""Shriram Finance FD receipts (deposit advice PDFs) -> one holding per deposit."""
+"""Shriram Finance FD receipts (deposit advice PDFs) -> one holding per deposit, as the receipt states it."""
 from datetime import date
 from decimal import Decimal as D
 
@@ -15,23 +15,22 @@ Deposit Amount : ₹500000.00
 """
 
 
-def test_receipt_fields_are_read():
-    fd = shriram.fd_from_text(RECEIPT)
-    assert fd == {"deposit_no": "TST-12345678", "deposited": date(2026, 1, 1), "amount": D("500000.00"),
-                  "rate": D("7.00"), "matures": date(2029, 1, 1), "maturity_amount": D("612500.00")}
+def test_deposit_as_the_receipt_states_it():
+    h = shriram.holding_from_text(RECEIPT)
+    assert (h.source, h.account, h.isin, h.as_of, h.units, h.price, h.value, h.matures) == (
+        "shriram", "TST-12345678", "TST-12345678", date(2026, 1, 1), D(1), D("500000.00"), D("500000.00"), date(2029, 1, 1))
 
 
-def test_open_fd_counts_at_deposit_amount():
-    [h] = shriram.holdings_from_text(RECEIPT, today=date(2026, 10, 21), owner="unconfirmed")
-    assert (h.source, h.account, h.value, h.as_of, h.owner) == ("shriram", "TST-12345678", D("500000.00"),
-                                                                 date(2026, 1, 1), "unconfirmed")
+def test_name_carries_rate_and_maturity_amount():
+    assert shriram.holding_from_text(RECEIPT).name == "Shriram FD TST-12345678 @ 7.00%, 612500.00 at maturity"
 
 
-def test_matured_fd_counts_zero_as_of_maturity():
-    [h] = shriram.holdings_from_text(RECEIPT, today=date(2029, 11, 1), owner="unconfirmed")
-    assert (h.value, h.as_of) == (D("0"), date(2029, 1, 1))
+def test_parser_does_not_judge_maturity():
+    import inspect
+    assert "today" not in inspect.signature(shriram.holding_from_text).parameters
 
 
-def test_holding_name_carries_rate_maturity_date_and_amount():
-    [h] = shriram.holdings_from_text(RECEIPT, today=date(2026, 10, 21), owner="unconfirmed")
-    assert h.name == "Shriram FD TST-12345678 @ 7.00% to 2029-01-01, 612500.00 at maturity"
+def test_not_a_receipt_raises():
+    import pytest
+    with pytest.raises(ValueError, match="not a Shriram FD receipt"):
+        shriram.holding_from_text("some other pdf")

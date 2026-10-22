@@ -7,7 +7,7 @@ ROOT = Path(__file__).parent.parent
 PKG = ROOT / "src" / "indian_finance_parsers"
 SOURCES = ROOT / "docs" / "sources"
 HEADINGS = re.findall(r"^## .+$", (SOURCES / "_template.md").read_text(), re.M)
-MODULES = sorted(p.stem for kind in ("importers", "purchases", "portfolio")
+MODULES = sorted(p.stem for kind in ("importers", "purchases", "portfolio", "trades")
                  for p in (PKG / kind).glob("*.py") if p.stem != "__init__")
 
 

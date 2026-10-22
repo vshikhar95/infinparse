@@ -16,11 +16,10 @@ One receipt per deposit, for open and closed deposits alike.
 Some receipts are protected, with the convention stated in the email. Decrypt first if needed.
 
 ## What you get
-`parse(path, owner="unconfirmed") -> list[Holding]`: one holding per deposit, at its deposit amount (accrued interest
-is ignored). Once the maturity date has passed, the holding is dated at maturity with value 0. The name carries the
-rate, the maturity date and the maturity amount.
+`parse(path) -> list[Holding]`: one holding per deposit, as the receipt states it: dated at the deposit date, valued at
+the deposit amount, `account` = the deposit number, `matures` = the maturity date. The name carries the rate and the
+maturity amount. Whether a deposit has matured, and what it is worth today, is your judgement.
 
 ## Assumptions and quirks
-- Maturity is judged against today's date when the receipt is parsed; re-parse to refresh it.
 - Dates are `dd-mm-yyyy`; amounts are INR.
 - Missing deposit number, dates or amount raises `ValueError`.

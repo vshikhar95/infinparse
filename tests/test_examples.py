@@ -4,25 +4,15 @@ from pathlib import Path
 from indian_finance_parsers import adapter
 
 EXAMPLE = tomllib.loads((Path(__file__).parent.parent / "examples" / "sources.example.toml").read_text())
-KIND_MODULE = {"cas": "cas", "zerodha_holdings": "zerodha", "zerodha_tradebook": "zerodha", "shriram_fd": "shriram",
-               "sgb": "sgb", "sbi_ppf": "sbi_ppf"}
+SECTIONS = {"source": ("importers", "importer"), "purchase_source": ("purchases", "parser"),
+            "portfolio_source": ("portfolio", "parser"), "trade_source": ("trades", "parser")}
 
 
 def test_every_section_is_present():
-    assert EXAMPLE["source"] and EXAMPLE["purchase_source"] and EXAMPLE["portfolio_source"]
-    assert EXAMPLE["portfolio"]["own"] == []
+    assert all(EXAMPLE[section] for section in SECTIONS)
 
 
-def test_importers_resolve():
-    for s in EXAMPLE["source"]:
-        assert hasattr(adapter("importers", s["importer"]), "parse")
-
-
-def test_purchase_parsers_resolve():
-    for s in EXAMPLE["purchase_source"]:
-        assert hasattr(adapter("purchases", s["parser"]), "parse")
-
-
-def test_portfolio_kinds_resolve():
-    for s in EXAMPLE["portfolio_source"]:
-        assert adapter("portfolio", KIND_MODULE[s["kind"]]).__name__.startswith("indian_finance_parsers.portfolio.")
+def test_every_named_parser_resolves():
+    for section, (kind, key) in SECTIONS.items():
+        for s in EXAMPLE[section]:
+            assert callable(adapter(kind, s[key]).parse), (section, s[key])

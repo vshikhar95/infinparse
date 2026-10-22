@@ -18,13 +18,11 @@ The detailed statement, for the period you need (for example from the earliest d
 The password you choose when you request the statement. Pass it as `parse(path, password=...)`.
 
 ## What you get
-`parse(path, owners=None, password=None) -> list[Holding]`: one holding per scheme, valued at the statement's
-valuation date. A fully redeemed scheme is kept with units 0 and value 0, so a later snapshot shows the folio at zero.
-`owners={"own": [scheme-name substrings], "default": "<label>"}` sets each holding's `owner`: a scheme whose name
-contains any of the substrings (case-insensitive) is `"own"`, and every other scheme gets the default. Without
-`owners` (or without a `"default"`), holdings are `"unconfirmed"`, so a missing mapping is visible rather than silently
-counted as yours. A wrong password raises `ValueError` naming only the file.
+`parse(path, password=None) -> list[Holding]`: one holding per scheme, valued at the statement's valuation date, with
+`account` = the folio number. A fully redeemed scheme is kept with units 0 and value 0, so a later snapshot shows the
+folio at zero. A wrong password raises `ValueError` naming only the file. casparser opens the encrypted PDF itself,
+so the password goes to `parse()` rather than through `decrypt`.
 
 ## Assumptions and quirks
-- casparser does the PDF reading; `holdings_from_cas(data, owners)` converts its dict, which is what the tests use.
+- casparser does the PDF reading; `holdings_from_cas(data)` converts its dict.
 - Values are in INR, as the statement reports them.

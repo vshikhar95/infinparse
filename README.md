@@ -19,7 +19,8 @@ flipped sign fails loudly instead of slipping through.
 | SBI Card | `Transaction_history.pdf` | download | `importers/sbi_card` | – | [docs/sources/sbi_card.md](docs/sources/sbi_card.md) |
 | SBI PPF | saved transactions page | saved page | `importers/sbi_ppf`, `portfolio/sbi_ppf` | – | [docs/sources/sbi_ppf.md](docs/sources/sbi_ppf.md) |
 | Zerodha funds ledger | `ledger-*.csv` | download | `importers/zerodha_ledger` | – | [docs/sources/zerodha_ledger.md](docs/sources/zerodha_ledger.md) |
-| Zerodha holdings, tradebook | `holdings-*.xlsx`, `tradebook-*.csv` | download | `portfolio/zerodha` | `excel` | [docs/sources/zerodha.md](docs/sources/zerodha.md) |
+| Zerodha holdings | `holdings-*.xlsx` | download | `portfolio/zerodha_holdings` | `excel` | [docs/sources/zerodha_holdings.md](docs/sources/zerodha_holdings.md) |
+| Zerodha tradebook | `tradebook-*.csv` | download | `trades/zerodha_tradebook` | – | [docs/sources/zerodha_tradebook.md](docs/sources/zerodha_tradebook.md) |
 | Mutual funds (CAMS/KFintech CAS) | CAS PDF | email on request | `portfolio/cas` | `cas` | [docs/sources/cas.md](docs/sources/cas.md) |
 | Sovereign Gold Bonds | RBI certificate PDF | email / download | `portfolio/sgb` | – | [docs/sources/sgb.md](docs/sources/sgb.md) |
 | Shriram Finance FD | deposit receipt PDF | email / download | `portfolio/shriram` | `decrypt` | [docs/sources/shriram.md](docs/sources/shriram.md) |
@@ -101,10 +102,13 @@ All in `indian_finance_parsers.models`. Amounts are `Decimal`.
 |---|---|---|
 | `as_of` | `date` | valuation date |
 | `source` | `str` | `cas`, `zerodha`, `ppf`, `sgb`, `shriram` |
-| `account` | `str` | folio, client id, bond or deposit number |
+| `account` | `str` | identifier the file prints (folio, client id, bond or deposit number), or `""` |
 | `name`, `isin` | `str` | instrument |
 | `units`, `price`, `value` | `Decimal` | quantity, unit price, units × price |
-| `owner` | `str` | a label you choose, for example `"own"`, `"joint"`, `"other"` |
+| `matures` | `date \| None` | maturity date, for deposits and bonds |
+
+Whose holding it is (yours, joint, someone else's) isn't in any of these files, so it isn't a field. Subclass `Holding` in
+your own code if you track it.
 
 **`Trade`** (Zerodha tradebook row): `trade_id`, `date`, `symbol`, `isin`, `side` (`buy`/`sell`), `quantity`,
 `price`, `exchange`.
@@ -112,7 +116,8 @@ All in `indian_finance_parsers.models`. Amounts are `Decimal`.
 ## Privacy
 
 Everything runs locally. Parsers read only the file you pass them: no network, no config files, no environment
-variables. The one network helper, `portfolio.sgb.fetch_rate()` (the IBJA gold rate), runs only when you call it.
+variables. Parsers report what a file says and check it against itself; valuing holdings at today's prices, judging
+whether a deposit has matured and naming accounts are left to you.
 All test fixtures are synthetic, and CI runs a PII check over the tree and the full git history.
 
 ## Your own parser
@@ -126,6 +131,15 @@ module, a synthetic fixture, a test and a runbook; see [docs/writing-an-adapter.
 
 Files only, including emails you save as files. This package does not fetch mail, log into banks, or store anything.
 Budgeting, ledgers and syncing to apps are left to the code that calls it.
+
+## Related projects
+
+[Beancount](https://github.com/beancount/beancount) users write importers on
+[beangulp](https://github.com/beancount/beangulp). Indian-bank importers for it include
+[dumbPy/beancount-importers-india](https://github.com/dumbPy/beancount-importers-india) (GPL-3.0) and
+[prabusw/beancount-importers-india](https://github.com/prabusw/beancount-importers-india) (AGPL-3.0), which cover
+banks and wallets this package doesn't yet. This package is the ledger-agnostic layer underneath: a Beancount importer
+can call these parsers from its `extract()`.
 
 ## Licence
 

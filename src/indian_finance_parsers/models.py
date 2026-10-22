@@ -39,7 +39,7 @@ class Holding:
     units: Decimal
     price: Decimal
     value: Decimal
-    owner: str           # e.g. "own", "joint", "other"
+    matures: date | None = None  # deposits and bonds: the maturity date the document states
 
 
 @dataclass

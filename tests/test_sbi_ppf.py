@@ -25,8 +25,8 @@ ROWS = [("09/08/2026", "DEPOSIT TFR- FAKE", "1,50,000.00", "11,50,000.00"),   # 
 def test_latest_balance_becomes_the_ppf_holding(tmp_path):
     p = tmp_path / "sbi-ppf.html"
     p.write_text(page(ROWS))
-    [h] = sbi_ppf.parse(p, owner="own")
-    assert (h.source, h.account, h.as_of, h.value, h.owner) == ("ppf", "SBI PPF", date(2026, 8, 9), D("1150000.00"), "own")
+    [h] = sbi_ppf.parse(p)
+    assert (h.source, h.account, h.as_of, h.value, h.matures) == ("ppf", "", date(2026, 8, 9), D("1150000.00"), None)
 
 
 def test_rows_that_dont_chain_are_rejected(tmp_path):
@@ -34,7 +34,7 @@ def test_rows_that_dont_chain_are_rejected(tmp_path):
     p = tmp_path / "sbi-ppf.html"
     p.write_text(page(bad))
     with pytest.raises(ValueError):
-        sbi_ppf.parse(p, owner="own")
+        sbi_ppf.parse(p)
 
 
 def test_statement_rows_are_oldest_first_signed_by_balance_change(tmp_path):
@@ -50,10 +50,3 @@ def test_march_31_credits_are_noted_as_ppf_interest(tmp_path):
     p = tmp_path / "sbi-ppf.html"
     p.write_text(page(ROWS))
     assert [x.notes for x in ppf_statement.parse(p)] == ["", "PPF interest", ""]
-
-
-def test_account_name_is_a_parameter(tmp_path):
-    p = tmp_path / "sbi-ppf.html"
-    p.write_text(page(ROWS))
-    [h] = sbi_ppf.parse(p, account="My PPF")
-    assert (h.account, h.name, h.owner) == ("My PPF", "My PPF", "own")

@@ -33,18 +33,18 @@ parser = "amazon"
 match = ["AMAZON"]
 window_days = [-1, 7]
 
-# ---- Portfolio files: what is owned -> list[Holding]
-# kind -> module: cas, zerodha_holdings / zerodha_tradebook -> zerodha, shriram_fd -> shriram, sgb, sbi_ppf
+# ---- Portfolio files: what is owned -> list[Holding]. parser = module in indian_finance_parsers.portfolio.
+# Whose money it is (own, joint, someone else's) is pipeline config, not parser input: tag rows after parsing.
 [[portfolio_source]]
 glob = "*_cp*.pdf"
-kind = "cas"
-password_env = "CAS_PASSWORD"
+parser = "cas"
+password_env = "CAS_PASSWORD"   # casparser opens the PDF itself, so pass this to cas.parse(password=...)
 
 [[portfolio_source]]
 glob = "holdings-*.xlsx"
-kind = "zerodha_holdings"
+parser = "zerodha_holdings"
 
-# Owner labels for CAS funds: schemes whose names contain any of these substrings are "own";
-# the pipeline passes {"own": own, "default": ...} to portfolio.cas.parse(owners=...).
-[portfolio]
-own = []
+# ---- Trades: what was bought or sold -> list[Trade]
+[[trade_source]]
+glob = "tradebook-*.csv"
+parser = "zerodha_tradebook"
