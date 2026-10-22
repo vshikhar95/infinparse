@@ -1,0 +1,18 @@
+[project]
+name = "purchase-history-parsers"
+version = "0.1.0"
+description = "Parse store purchase histories (Steam, Google Play, Humble Bundle, Amazon, PlayStation) into plain Python records."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+dependencies = []
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Topic :: Office/Business :: Financial",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
