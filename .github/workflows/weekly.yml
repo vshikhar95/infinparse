@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  UV_VERSION: "0.12.10"
+  UV_VERSION: "0.13.4"
 
 jobs:
   upstream:  # the lockfile pins CI; this catches breakage from new dependency releases (GitHub emails on failure)

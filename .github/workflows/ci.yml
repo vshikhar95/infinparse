@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  UV_VERSION: "0.12.10"  # pinned: `uv audit` is experimental
+  UV_VERSION: "0.13.4"  # pinned (`uv audit` is experimental); 0.13.4+ fixes the eMudhra CA bundle (GHSA-6q48-6c7w-9gw2)
 
 jobs:
   test:
