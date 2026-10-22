@@ -21,8 +21,12 @@ uv run pytest -q -W error
 scripts/pii_check.sh            # the PII gate CI runs; pass a private denylist file as an argument locally
 ```
 
-Test fixtures are synthetic. Never commit a real statement, not even a redacted one; see each package's guide for
-writing fixtures.
+Test fixtures are synthetic. Never commit a real statement, not even a redacted one. See
+[CONTRIBUTING.md](CONTRIBUTING.md) for writing fixtures and opening PRs, [SECURITY.md](SECURITY.md) for reporting
+vulnerabilities, and [docs/ci-cd.md](docs/ci-cd.md) for what CI checks.
+
+Each package is released on its own: pushing the tag `<package>-v<version>` (on `main`) builds, tests and publishes
+it to PyPI, with release notes on GitHub.
 
 ## Licence
 

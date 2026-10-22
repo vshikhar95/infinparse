@@ -1,0 +1,6 @@
+# Changes to the gates, the workflows and the fixtures need the maintainer's review.
+/.github/            @vshikhar95
+/scripts/            @vshikhar95
+/.gitleaks.toml      @vshikhar95
+/.gitleaksignore     @vshikhar95
+**/tests/fixtures/   @vshikhar95

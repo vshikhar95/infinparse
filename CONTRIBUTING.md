@@ -1,0 +1,37 @@
+# Contributing
+
+Thanks for helping. These parsers handle people's bank statements and purchase histories, so one rule comes first:
+
+**Never commit, attach or paste a real statement or export, not even a redacted one.** That applies to fixtures,
+issues, pull requests and screenshots.
+
+## Adding or fixing a parser
+
+1. Look at your file's structure with `python -m indian_finance_parsers.peek FILE` (needs the `excel` extra). It
+   prints the layout with every letter and digit masked.
+2. Write a small synthetic fixture with that structure and **invented** values: shops like `TESTMART`, card numbers
+   starting `4111`, account numbers of zeros, round amounts, dates far from today. Don't reuse real issue prices,
+   published rates, fund or product names, branch codes, cities or timestamps (see the fixture checklist in
+   `packages/indian-finance-parsers/docs/writing-an-adapter.md`).
+3. Add a test, and a runbook from `docs/sources/_template.md` in the package you're changing.
+4. Run the checks CI runs:
+
+   ```bash
+   uv sync
+   uv run pytest -q -W error
+   uvx ruff check .
+   scripts/pii_check.sh
+   ```
+
+Parsers must stay pure: read only the file they are given; no network, environment variables or config files. Error
+messages name the file, row and field, never amounts or descriptions.
+
+## Pull requests
+
+Use a short conventional title (`fix(hdfc_card): …`, `feat(steam): …`); merged PR titles become release notes.
+Changes to `.github/`, `scripts/`, `.gitleaks*` and test fixtures need a maintainer's review (CODEOWNERS).
+
+## Releases (maintainers)
+
+Push a tag `<package>-v<version>` on a commit that is on `main`, for example `indian-finance-parsers-v0.2.0`. CI builds,
+tests and publishes that package to PyPI and writes the GitHub release. See `docs/ci-cd.md`.

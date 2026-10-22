@@ -61,11 +61,11 @@ release-please was dropped.
 1. **`build`** (read-only token, no publishing rights): check out the tag; confirm the tagged commit is on `main`;
    test; `uv build --package <name>` from a clean checkout; check the members against the allowlist; upload `dist/`
    as an artifact.
-2. **`notes`:** generate the release notes from the merged PRs since the previous tag of that package, then run them
-   through the PII gate.
-3. **`publish`** (environment `pypi`, `id-token: write` only, no checkout and no third-party code beyond the pinned
+2. **`publish`** (environment `pypi`, `id-token: write` only, no checkout and no third-party code beyond the pinned
    publish action): download the artifact and upload it with PyPI Trusted Publishing.
-4. **`release`:** create the GitHub release from the checked notes, and attach `dist/`.
+3. **`github-release`** (`contents: write`): generate the notes from the merged PRs since that package's previous tag,
+   run them through the PII gate, then create the GitHub release with `dist/` attached. The notes never reach PyPI
+   (its page shows the README), so checking them after the upload is enough.
 
 PyPI's trusted-publisher entries name this repo, `release.yml` and the `pypi` environment. For the first release they
 are "pending publishers". The `pypi` environment has no reviewer, because a solo maintainer can't approve their own
@@ -74,7 +74,8 @@ environment's deployment rule (tags only, from this repo).
 
 ## Hardening
 
-- Every action is pinned to a full commit SHA, and Dependabot bumps the pins.
+- Every action is pinned to a full commit SHA, choosing the newest release at least 14 days old; Dependabot bumps
+  the pins with a 14-day cooldown. The gitleaks and actionlint binaries are verified against pinned checksums.
 - Workflows default to `permissions: contents: read`. Only the jobs that need more get it: `id-token: write` for
   publish, `contents: write` for creating the release.
 - Workflows trigger on `pull_request`, never `pull_request_target`. No `${{ }}` user text is interpolated into

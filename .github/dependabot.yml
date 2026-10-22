@@ -1,0 +1,13 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions  # bumps the SHA pins
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 14  # let a release age before adopting it
+  - package-ecosystem: uv  # security updates to uv.lock (version updates off: floors, not pins)
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0

@@ -1,0 +1,28 @@
+name: A file doesn't parse
+description: A statement or export fails, or parses wrong
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Do not attach your file, and do not paste its contents.** It holds your financial data, and issues are public.
+        Instead, paste the masked structure from `python -m indian_finance_parsers.peek FILE`
+        (it replaces every letter and digit). For store exports, describe the layout instead.
+  - type: input
+    id: parser
+    attributes:
+      label: Parser
+      placeholder: importers/hdfc_card, steam, ...
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: The error message (it names only the file, row and field), or what came out wrong.
+    validations:
+      required: true
+  - type: textarea
+    id: structure
+    attributes:
+      label: Masked structure (peek output)
+      render: text

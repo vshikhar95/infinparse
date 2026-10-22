@@ -1,25 +1,160 @@
 name: ci
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_VERSION: "0.12.10"  # pinned: `uv audit` is experimental
 
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: ["3.11", "3.12", "3.13", "3.14"]
+        python: ["3.11", "3.14"]  # floor and ceiling of requires-python
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
+          persist-credentials: false
+          fetch-depth: 0  # tags give hatch-vcs its versions
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
+        with:
+          version: ${{ env.UV_VERSION }}
           python-version: ${{ matrix.python }}
-      - run: uv sync                   # the workspace dev group installs both packages with every extra
+          enable-cache: false
+      - run: uv sync --locked
       - run: uv run pytest -q -W error  # includes the exporter tests, which run the browser scripts' logic in node
-      - run: uv build --all-packages    # each package must build on its own
+
+  test-lowest:  # the finance package's dependency floors are real
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: "3.11"
+          enable-cache: false
+      - run: uv sync --resolution lowest-direct
+      - run: uv run pytest -q  # no -W error: old releases emit deprecation warnings we don't control
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: "3.11"
+          enable-cache: false
+      - run: uv build --all-packages -o dist
+      - name: only package files ship
+        run: python3 scripts/check_dist.py dist/*
+      - name: the base install needs no extras
+        run: |
+          uv venv /tmp/base
+          uv pip install --python /tmp/base dist/indian_finance_parsers-*.whl
+          /tmp/base/bin/python - <<'PY'
+          import importlib, importlib.util
+          assert importlib.util.find_spec("pandas") is None, "pandas must stay an optional extra"
+          for m in ["importers.hdfc_card", "importers.icici_card", "importers.icici_card_pdf", "importers.sbi_card",
+                    "importers.sbi_ppf", "importers.zerodha_ledger", "portfolio.sgb", "portfolio.shriram",
+                    "portfolio.sbi_ppf", "trades.zerodha_tradebook", "checks", "decrypt", "models"]:
+              importlib.import_module(f"indian_finance_parsers.{m}")
+          print("base install imports every PDF/CSV/HTML adapter")
+          PY
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: false
+      - name: ruff
+        run: uvx ruff@0.14.2 check .
+      - name: biome (exporters)
+        run: npx --yes @biomejs/biome@1.9.4 lint packages/purchase-history-parsers/exporters
+      - name: shellcheck
+        run: shellcheck scripts/*.sh
+      - name: actionlint
+        run: |
+          curl -sSLo actionlint.tgz https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  actionlint.tgz" | sha256sum -c -
+          tar xzf actionlint.tgz actionlint
+          ./actionlint
+      - name: zizmor (workflow security)
+        run: uvx zizmor@1.30.1 --offline .github/workflows
 
   pii:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          fetch-depth: 0  # the gate scans all of history, not just the tip
-      - run: scripts/pii_check.sh
+          persist-credentials: false
+          fetch-depth: 0  # the gate scans all of history
+      - name: PII gate (on a PR, the gate's own code comes from the base branch, so a PR can't weaken it)
+        env:
+          PII_TEXT: ${{ github.event.pull_request.title }}
+
+            ${{ github.event.pull_request.body }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          gate=scripts/pii_check.sh
+          if [ -n "$BASE_REF" ]; then git show "origin/$BASE_REF:scripts/pii_check.sh" > /tmp/pii_check.sh && gate=/tmp/pii_check.sh; fi
+          bash "$gate"
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: gitleaks (secrets and Indian identifiers; on a PR the config comes from the base branch)
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          curl -sSLo gitleaks.tgz https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tgz" | sha256sum -c -
+          tar xzf gitleaks.tgz gitleaks
+          config=.gitleaks.toml
+          if [ -n "$BASE_REF" ]; then git show "origin/$BASE_REF:.gitleaks.toml" > /tmp/gitleaks.toml && config=/tmp/gitleaks.toml; fi
+          ./gitleaks git --config "$config" --redact --no-banner .
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: false
+      - run: uv audit --locked --preview-features audit-command
+
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294  # v5.0.0
