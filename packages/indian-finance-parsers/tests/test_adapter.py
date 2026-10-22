@@ -33,7 +33,7 @@ def test_dotted_path(tmp_path, monkeypatch):
 def test_missing_parse_is_clear(tmp_path, monkeypatch):
     _pkg(tmp_path, monkeypatch, empty="")
     with pytest.raises(AttributeError, match="parse"):
-        adapter("importers", "mine.empty").parse
+        adapter("importers", "mine.empty").parse  # noqa: B018 (the attribute access is what raises)
 
 
 def test_unknown_builtin_raises():

@@ -47,7 +47,7 @@ ${rowsHtml.join("\n")}
 }
 
 async function exportHistory() {
-  await loadAll({ more: () => { const b = document.getElementById("load_more_button"); return b && b.offsetParent ? b : null; },
+  await loadAll({ more: () => { const b = document.getElementById("load_more_button"); return b?.offsetParent ? b : null; },
                   rows: () => document.querySelectorAll("tr.wallet_table_row").length });
   saveFile('steam-purchase-history.PERSONAL.html', buildExport([...document.querySelectorAll("table.wallet_history_table tr.wallet_table_row")].map((r) => r.outerHTML)));
 }

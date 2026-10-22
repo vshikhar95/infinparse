@@ -8,6 +8,10 @@ import pytest
 from indian_finance_parsers.importers import hdfc_card as hdfc
 from indian_finance_parsers.models import Txn
 
+
+def w(text, x):
+    return {"text": text, "x0": x}
+
 ROWS = json.loads((Path(__file__).parent / "fixtures" / "hdfc_card_rows.json").read_text())
 
 
@@ -62,7 +66,6 @@ def test_check_totals_ignores_finance_charges():
 
 
 def test_description_wrapped_above_and_below_a_bare_payment_row_is_kept():
-    w = lambda t, x: {"text": t, "x0": x}
     rows = [[w("BPPY", 120), w("CC", 150), w("PAYMENT", 170), w("(Ref#", 230)],
             [w("03/09/2026|", 20), w("10:00", 80), w("+", 380), w("C", 390), w("12,000.00", 400), w("l", 460)],
             [w("ST0000001)", 120)],
@@ -73,7 +76,6 @@ def test_description_wrapped_above_and_below_a_bare_payment_row_is_kept():
 
 def test_emi_eligible_marker_is_stripped_and_noted():
     # HDFC prints "EMI " before any charge that may be converted to EMI; it is still an ordinary charge
-    w = lambda t, x: {"text": t, "x0": x}
     rows = [[w("04/09/2026|", 20), w("10:00", 80), w("EMI", 120), w("TESTMART", 150), w("CITY", 210),
              w("C", 390), w("2,518.24", 400)],
             [w("05/09/2026|", 20), w("10:00", 80), w("SHOP", 120), w("C", 390), w("99.00", 400)]]
@@ -82,6 +84,5 @@ def test_emi_eligible_marker_is_stripped_and_noted():
 
 
 def test_a_lone_emi_word_is_not_a_marker():
-    w = lambda t, x: {"text": t, "x0": x}
     rows = [[w("04/09/2026|", 20), w("10:00", 80), w("EMI", 120), w("C", 390), w("50.00", 400)]]
     assert [(t.description, t.notes) for t in hdfc.rows_from_words(rows, coins_x=None)] == [("EMI", "")]

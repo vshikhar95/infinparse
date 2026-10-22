@@ -10,6 +10,10 @@ from bs4 import BeautifulSoup
 from purchase_history_parsers.models import Purchase
 
 
+def _cell(row, cls):
+    return row.select_one(f"td.{cls}")
+
+
 def _text(node):
     """The node's text pieces, stripped; [] for a missing node."""
     return list(node.stripped_strings) if node else []
@@ -38,15 +42,14 @@ def parse(path):
     out, seen = [], Counter()
     for row in soup.select("table.wallet_history_table tr.wallet_table_row"):
         transid = re.search(r"transid=(\d+)", " ".join(str(v) for v in row.attrs.values()))
-        cell = lambda cls: row.select_one(f"td.{cls}")
-        type_lines = _text(cell("wht_type"))
+        type_lines = _text(_cell(row, "wht_type"))
         if not type_lines:
             continue  # header-ish rows
         raw_type, payment = type_lines[0], re.sub(r"\s+", " ", " ".join(type_lines[1:]))
-        amount, currency = _money(" ".join(_text(cell("wht_total"))))
+        amount, currency = _money(" ".join(_text(_cell(row, "wht_total"))))
         if amount is None:
             continue
-        wallet_change = " ".join(_text(cell("wht_wallet_change")))
+        wallet_change = " ".join(_text(_cell(row, "wht_wallet_change")))
         if "Market" in raw_type:
             kind = "market"
         elif "Refund" in raw_type:
@@ -66,8 +69,8 @@ def parse(path):
             store="steam",
             # market rows have no transid: hash the row's text so re-saved pages map to the same id
             order_id=_order_id(transid, row, kind, seen),
-            date=datetime.strptime(_text(cell("wht_date"))[0], "%d %b, %Y").date(),
-            items=" | ".join(_text(cell("wht_items"))),
+            date=datetime.strptime(_text(_cell(row, "wht_date"))[0], "%d %b, %Y").date(),
+            items=" | ".join(_text(_cell(row, "wht_items"))),
             kind=kind, amount=amount, currency=currency, payment=payment,
             original_amount=_money(orig.get_text())[0] if orig else None,
             charged=charged, refunded="wht_refunded" in str(row), raw_type=raw_type,

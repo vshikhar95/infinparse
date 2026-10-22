@@ -83,8 +83,8 @@ def test_google_play_export_keeps_only_order_lines(tmp_path):
                                          ("humble.user.js", "www.humblebundle.com")])
 def test_exporter_header_stays_least_privilege(script, host):
     header = (EXPORTERS / script).read_text().split("// ==/UserScript==")[0]
-    grants = [l.split(None, 2)[2].strip() for l in header.splitlines() if l.startswith("// @grant")]
-    matches = [l.split(None, 2)[2].strip() for l in header.splitlines() if l.startswith("// @match")]
+    grants = [line.split(None, 2)[2].strip() for line in header.splitlines() if line.startswith("// @grant")]
+    matches = [line.split(None, 2)[2].strip() for line in header.splitlines() if line.startswith("// @match")]
     assert grants == ["none"]  # no GM_xmlhttpRequest: it could send data to another site
     assert "@connect" not in header and "@require" not in header
     assert matches and all(m.startswith(f"https://{host}/") for m in matches)

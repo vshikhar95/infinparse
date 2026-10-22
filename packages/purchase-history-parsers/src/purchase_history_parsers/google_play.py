@@ -18,7 +18,7 @@ def parse(path):
     soup = BeautifulSoup(Path(path).read_text(encoding="utf-8", errors="replace"), "html.parser")
     for tag in soup(["script", "style"]):
         tag.decompose()
-    lines = [l.strip() for l in (soup.body or soup).get_text("\n").splitlines() if l.strip()]
+    lines = [line.strip() for line in (soup.body or soup).get_text("\n").splitlines() if line.strip()]
     lines = lines[lines.index("Order history"):]
     out, seen = [], Counter()
     for i in range(1, len(lines) - 1):
