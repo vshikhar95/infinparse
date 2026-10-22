@@ -10,12 +10,17 @@ from decimal import Decimal
 
 from purchase_history_parsers.models import Purchase
 
+MAX_MEMBER_BYTES = 200 * 1024 * 1024  # a real export is a few MB; a zip bomb expands far past this
 ORDERS = "Your Amazon Orders/Order History.csv"
 REFUNDS = "Your Returns & Refunds/Refund Details.csv"
 
 
 def _rows(z, name):
-    return list(csv.DictReader(io.TextIOWrapper(z.open(name), "utf-8-sig"))) if name in z.namelist() else []
+    if name not in z.namelist():
+        return []
+    if z.getinfo(name).file_size > MAX_MEMBER_BYTES:
+        raise ValueError(f"{name.rsplit('/', 1)[-1]} in the zip is too large to be an Amazon export")
+    return list(csv.DictReader(io.TextIOWrapper(z.open(name), "utf-8-sig")))
 
 
 def _amt(s):

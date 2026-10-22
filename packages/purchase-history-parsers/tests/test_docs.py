@@ -7,7 +7,7 @@ ROOT = Path(__file__).parent.parent
 SOURCES = ROOT / "docs" / "sources"
 HEADINGS = re.findall(r"^## .+$", (SOURCES / "_template.md").read_text(), re.M)
 MODULES = sorted(p.stem for p in (ROOT / "src" / "purchase_history_parsers").glob("*.py")
-                 if p.stem not in ("__init__", "models"))
+                 if p.stem != "models" and not p.stem.startswith("_"))
 
 
 @pytest.mark.parametrize("module", MODULES)

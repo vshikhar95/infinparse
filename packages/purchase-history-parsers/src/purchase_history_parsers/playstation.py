@@ -6,6 +6,7 @@ from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 
+from purchase_history_parsers._html import TAG, drop
 from purchase_history_parsers.models import Purchase
 
 RS = r"Rs ([\d,]+(?:\.\d\d)?)"
@@ -17,7 +18,7 @@ def _money(s):
 
 
 def _text(raw):
-    t = re.sub(r"<style.*?</style>|<[^>]+>", " ", raw, flags=re.S)
+    t = TAG.sub(" ", drop(raw, "style"))
     return re.sub(r"\s+", " ", html.unescape(t)).strip()
 
 

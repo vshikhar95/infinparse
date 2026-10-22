@@ -7,18 +7,16 @@ from datetime import datetime
 from decimal import Decimal
 from html import unescape
 
+from purchase_history_parsers._html import TAG, blocks
 from purchase_history_parsers.models import Purchase
-
-ROW = re.compile(r'(<tr[^>]*class="wallet_table_row[^"]*"[^>]*>)(.*?)</tr>', re.S)
 
 
 def _cell(row, cls):
-    m = re.search(rf'<td[^>]*class="{cls}[^"]*"[^>]*>(.*?)</td>', row, re.S)
-    return m.group(1) if m else ""
+    return next((inner for tag, inner in blocks(row, "td") if f'class="{cls}' in tag), "")
 
 
 def _text(html):
-    return [unescape(t).strip() for t in re.split(r"<[^>]+>", html) if t.strip()]
+    return [unescape(t).strip() for t in TAG.split(html) if t.strip()]
 
 
 def _money(s):
@@ -42,8 +40,11 @@ def _order_id(transid, row, kind, seen):
 def parse(path):
     html = Path(path).read_text(encoding="utf-8", errors="replace")
     table = html[html.find('class="wallet_history_table"'):]
+    end = table.find("</table>")
     out, seen = [], Counter()
-    for tag, row in ROW.findall(table[:table.find("</table>")]):
+    for tag, row in blocks(table if end == -1 else table[:end], "tr"):
+        if 'class="wallet_table_row' not in tag:
+            continue
         transid = re.search(r"transid=(\d+)", tag)
         type_lines = _text(_cell(row, "wht_type"))
         if not type_lines:

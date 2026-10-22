@@ -12,8 +12,19 @@ from pathlib import Path
 from indian_finance_parsers.models import Txn
 
 
+def _blocks(html, tag):
+    """Inner html of every <tag>...</tag>, split on the closing tag: linear even on a crafted page."""
+    out = []
+    for chunk in html.split(f"</{tag}>")[:-1]:
+        start = chunk.rfind(f"<{tag}")
+        end = chunk.find(">", start)
+        if start != -1 and end != -1:
+            out.append(chunk[end + 1:])
+    return out
+
+
 def _cells(row):
-    return [re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", c)).strip() for c in re.findall(r"<td[^>]*>(.*?)</td>", row, re.S)]
+    return [re.sub(r"\s+", " ", re.sub(r"<[^<>]*>", " ", c)).strip() for c in _blocks(row, "td")]
 
 
 def _money(s):
@@ -23,7 +34,7 @@ def _money(s):
 def parse(path) -> list[Txn]:
     """Oldest first, with balance_after. The first row is taken as money in."""
     page = html.unescape(Path(path).read_text(encoding="utf-8", errors="replace"))
-    cells = [c for c in (_cells(r) for r in re.findall(r"<tr.*?</tr>", page, re.S)) if len(c) == 4]
+    cells = [c for c in (_cells(r) for r in _blocks(page, "tr")) if len(c) == 4]
     raw = [(datetime.strptime(d, "%d/%m/%Y").date(), desc, _money(a), _money(b)) for d, desc, a, b in cells]
     if not raw:
         raise ValueError(f"{Path(path).name}: no PPF transaction rows found")
