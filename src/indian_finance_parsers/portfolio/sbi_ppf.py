@@ -35,7 +35,7 @@ def rows(path):
     return out
 
 
-def parse(path, owner="own", account="PPF"):
+def parse(path, owner="own", account="SBI PPF"):
     d, _, _, balance = rows(path)[-1]
     return [Holding(as_of=d, source="ppf", account=account, name=account, isin="SBI-PPF",
                     units=Decimal(1), price=balance, value=balance, owner=owner)]

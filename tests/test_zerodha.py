@@ -113,3 +113,20 @@ def test_ledger_importer_flows_through_statement_chain(tmp_path):
 def test_holdings_owner_is_configurable(tmp_path):
     rows = zerodha.holdings(_holdings_xlsx(tmp_path), as_of=date(2026, 10, 20), owner="other")
     assert {r.owner for r in rows} == {"other"}
+
+
+def test_errors_name_only_the_file(tmp_path):
+    (tmp_path / "secret_dir").mkdir()
+    p = tmp_path / "secret_dir" / "ledger.csv"
+    p.write_text(LEDGER.replace("Closing Balance,,,,,,1210.00", "Closing Balance,,,,,,1211.00"))
+    with pytest.raises(ValueError, match="^ledger.csv: closing") as e:
+        zerodha.ledger(p)
+    assert "secret_dir" not in str(e.value)
+
+
+def test_ledger_broken_balance_chain_raises(tmp_path):
+    p = tmp_path / "ledger.csv"
+    p.write_text(LEDGER.replace("Buy FAKECO,2026-04-03,--,Book Voucher,300.25,,1199.75",
+                                "Buy FAKECO,2026-04-03,--,Book Voucher,300.25,,1100.00"))
+    with pytest.raises(ValueError, match="balance chain"):
+        zerodha.ledger(p)

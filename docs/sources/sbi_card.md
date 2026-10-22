@@ -4,14 +4,15 @@
 SBI Card credit cards, transaction-history PDF. Parser `importers/sbi_card`, base install.
 
 ## Official site
-<https://www.sbicard.com/>. After logging in: Transactions / Account summary → transaction history → download PDF.
+<https://www.sbicard.com/>. After logging in, open the transaction history and download it as PDF. This is not the
+monthly statement PDF (View Statement), which this parser doesn't read.
 
 ## How the file arrives
 Portal download, named `Transaction_history.pdf`.
 
 ## What to pick
-The longest range offered. The site covers up to 2 years back from the day you download, so download at least once
-every two years to keep a gapless history.
+The longest range offered. SBI Card keeps 24 months online, so download at least once every two years to keep a
+gapless history.
 
 ## Password
 None for the transaction-history download.

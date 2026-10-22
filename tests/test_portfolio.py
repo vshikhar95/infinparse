@@ -48,8 +48,14 @@ def test_cas_owners_argument(monkeypatch):
     assert [r.owner for r in rows] == ["other", "own", "other"]
 
 
-def test_cas_owners_default_to_own():
-    assert cas.owner_of("Acme Liquid Fund", cas.DEFAULT_OWNERS) == "own"
+def test_cas_without_owners_marks_holdings_unconfirmed(monkeypatch):
+    import casparser
+    monkeypatch.setattr(casparser, "read_cas_pdf", lambda path, password: _Cas(CAS))
+    assert {r.owner for r in cas.parse("cas.pdf", password="x")} == {"unconfirmed"}
+
+
+def test_owners_without_a_default_mark_the_rest_unconfirmed():
+    assert cas.owner_of("Acme Liquid Fund", {"own": ["growth"]}) == "unconfirmed"
 
 
 def test_cas_password_argument(monkeypatch):
@@ -69,6 +75,8 @@ def test_cas_wrong_password_is_a_clean_value_error(monkeypatch):
         raise IncorrectPasswordError(f"bad password for {path}")
     monkeypatch.setattr(casparser, "read_cas_pdf", boom)
     import pytest
+    pdf = "/secret_dir/cas.pdf"  # a variable, so the traceback's source line doesn't contain the path
     with pytest.raises(ValueError, match="cas.pdf: wrong or missing password") as e:
-        cas.parse("/secret_dir/cas.pdf", password="wrong")
-    assert "secret_dir" not in str(e.value) and e.value.__context__ is None
+        cas.parse(pdf, password="wrong")
+    import traceback
+    assert "secret_dir" not in "".join(traceback.format_exception(e.value))

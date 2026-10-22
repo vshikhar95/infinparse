@@ -5,12 +5,12 @@ from pathlib import Path
 
 from indian_finance_parsers.models import Holding
 
-DEFAULT_OWNERS = {"own": [], "default": "own"}  # no owners given: every scheme is "own"
+UNCONFIRMED = "unconfirmed"  # owner when the caller didn't say: visible, never silently "own"
 
 
 def owner_of(name: str, owners: dict) -> str:
     low = name.lower()
-    return "own" if any(s.lower() in low for s in owners["own"]) else owners["default"]
+    return "own" if any(s.lower() in low for s in owners.get("own", [])) else owners.get("default", UNCONFIRMED)
 
 
 def holdings_from_cas(data: dict, owners: dict) -> list[Holding]:
@@ -28,13 +28,12 @@ def holdings_from_cas(data: dict, owners: dict) -> list[Holding]:
 
 
 def parse(path, owners: dict | None = None, password: str | None = None) -> list[Holding]:
-    """owners: {"own": [scheme-name substrings], "default": owner for every other scheme}."""
+    """owners: {"own": [scheme-name substrings], "default": owner for every other scheme}.
+    Without owners every holding is "unconfirmed"; a wrong password raises ValueError naming only the file."""
     import casparser
     from casparser.exceptions import IncorrectPasswordError
     try:
         data = casparser.read_cas_pdf(str(path), password).model_dump()
-    except IncorrectPasswordError:  # chained from the PDF library, whose message carries the full path
-        data = None
-    if data is None:
-        raise ValueError(f"{Path(path).name}: wrong or missing password")
-    return holdings_from_cas(data, owners or DEFAULT_OWNERS)
+    except IncorrectPasswordError:  # its message carries the full path; from None keeps it out of tracebacks
+        raise ValueError(f"{Path(path).name}: wrong or missing password") from None
+    return holdings_from_cas(data, owners or {})

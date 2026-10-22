@@ -5,7 +5,7 @@ HDFC Bank credit cards, monthly PDF statement. Parser `importers/hdfc_card`, bas
 (plus `decrypt` to open the password-protected PDF).
 
 ## Official site
-<https://www.hdfcbank.com/>. Past statements are also in NetBanking under Cards → Credit Cards → Statements.
+<https://www.hdfcbank.com/>. Past statements are also in NetBanking, in the Cards section's statement view.
 
 ## How the file arrives
 Monthly email attachment from the bank's card statements email. Filenames look like
@@ -15,7 +15,7 @@ Monthly email attachment from the bank's card statements email. Filenames look l
 The statement PDF as attached; keep the original filename, because `meta()` reads it.
 
 ## Password
-Protected with the convention given in the statement email (built from your name and date of birth). Decrypt with
+Protected; the statement email states the convention. Decrypt with
 `indian_finance_parsers.decrypt.decrypted(path, password, tmpdir)`.
 
 ## What you get

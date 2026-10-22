@@ -4,7 +4,7 @@
 Steam store purchases, refunds and Community Market activity. Parser `purchases/steam`, base install.
 
 ## Official site
-<https://store.steampowered.com/>. Account details → View purchase history.
+<https://store.steampowered.com/>. Account details → Store & Purchase History → View purchase history.
 
 ## How the file arrives
 Save the purchase-history page from your browser as HTML, after clicking "Load more" until the whole history shows.

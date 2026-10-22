@@ -4,8 +4,9 @@
 ICICI Bank savings or current account. Parser `importers/icici_bank`, extra `excel`.
 
 ## Official site
-<https://www.icicibank.com/>. In internet banking: Accounts → Account statement / Transaction history → choose the
-period → download as XLS.
+<https://www.icicibank.com/> (statements help: Personal Banking → Accounts → Savings Account → Statements). In Net
+Banking: Bank Accounts → e-Statements → View Detailed Statement → choose the period → download as Excel (up to four
+years back).
 
 ## How the file arrives
 Portal download. The file is named `OpTransactionHistory<...>.xls`.
@@ -27,4 +28,5 @@ None; the XLS download is not encrypted.
 - Long remarks wrap onto a row that has only the remarks cell; it is appended to the previous row.
 - The export can be newest-first; it is reversed. Same-day rows printed out of order (a reversal before its
   payment) are re-ordered by their running balance.
-- The parser counts numbered rows and raises `ValueError` if any were skipped.
+- The parser counts numbered rows and raises `ValueError` if any were skipped, and checks that every running balance
+  chains from the one before it.

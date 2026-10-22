@@ -101,3 +101,18 @@ def test_binary_files_are_rejected(repo):
     git(repo, "commit", "-qm", "c")
     r = check(repo)
     assert r.returncode == 1 and "orders.zip" in r.stdout and "binary" in r.stdout
+
+
+def test_noreply_exemption_is_per_address(repo):
+    commit(repo, "a.py", "# 1+x@users.noreply.github.com\n")
+    assert check(repo).returncode == 0
+    commit(repo, "a.py", "# 1+x@users.noreply.github.com cc someone@gmail.com\n")
+    assert check(repo).returncode == 1
+
+
+def test_names_with_spaces_are_reported_whole(repo):
+    (repo / "my orders.zip").write_bytes(b"PK\x03\x04\x00")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-qm", "c")
+    r = check(repo)
+    assert "my orders.zip: binary file" in r.stdout and "history my orders.zip: binary file" in r.stdout

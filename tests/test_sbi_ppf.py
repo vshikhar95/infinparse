@@ -26,7 +26,7 @@ def test_latest_balance_becomes_the_ppf_holding(tmp_path):
     p = tmp_path / "sbi-ppf.html"
     p.write_text(page(ROWS))
     [h] = sbi_ppf.parse(p, owner="own")
-    assert (h.source, h.account, h.as_of, h.value, h.owner) == ("ppf", "PPF", date(2026, 8, 9), D("1150000.00"), "own")
+    assert (h.source, h.account, h.as_of, h.value, h.owner) == ("ppf", "SBI PPF", date(2026, 8, 9), D("1150000.00"), "own")
 
 
 def test_rows_that_dont_chain_are_rejected(tmp_path):

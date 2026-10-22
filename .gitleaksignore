@@ -1,0 +1,2 @@
+# synthetic emails in the PII gate's own tests (they prove the gate catches an address)
+tests/test_pii_check.py:email-address:109

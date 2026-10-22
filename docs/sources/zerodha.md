@@ -5,15 +5,15 @@ Zerodha demat holdings and trades. Module `portfolio/zerodha`: `holdings()` need
 `ledger()` need only the base install.
 
 ## Official site
-<https://console.zerodha.com/>. Portfolio → Holdings → download XLSX; Reports → Tradebook → choose the financial
-year → download CSV.
+<https://console.zerodha.com/>. Portfolio → Holdings → download XLSX; Reports → Tradebook → choose a date range
+(Console limits each download to a year) → download CSV.
 
 ## How the file arrives
 Portal downloads: `holdings-<client id>.xlsx` and `tradebook-<client id>-EQ-<fy>.csv`.
 
 ## What to pick
-Holdings: the current snapshot. Tradebook: equity segment, one financial year per file (ranges may overlap; dedupe
-on `trade_id` + `exchange`).
+Holdings: the current snapshot. Tradebook: equity segment, up to a year per file (ranges may overlap; dedupe on
+`trade_id` + `exchange`).
 
 ## Password
 None.

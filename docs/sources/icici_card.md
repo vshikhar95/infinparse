@@ -4,7 +4,8 @@
 ICICI Bank credit cards, CSV export. Parser `importers/icici_card`, base install.
 
 ## Official site
-<https://www.icicibank.com/>. In internet banking: Cards → Credit card → Statements / Transactions → download as CSV.
+<https://www.icicibank.com/>. In Net Banking: Credit Cards → View Statement → download. Pick the CSV/Excel option
+where offered; for the PDF statement use `icici_card_pdf` instead.
 
 ## How the file arrives
 Portal download, named like `CreditCardStatement<...>.CSV`.

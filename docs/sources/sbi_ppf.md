@@ -21,7 +21,7 @@ None.
 ## What you get
 - `importers/sbi_ppf.parse(path)` → `list[Txn]` oldest first, with `balance_after`. Credits on 31 March get the note
   `"PPF interest"`, because interest is worded like a deposit. `meta()` returns `{}`.
-- `portfolio/sbi_ppf.parse(path, owner="own", account="PPF")` → one `Holding` with the latest balance.
+- `portfolio/sbi_ppf.parse(path, owner="own", account="SBI PPF")` → one `Holding` with the latest balance.
 - `portfolio/sbi_ppf.rows(path)` → the raw `(date, description, signed amount, balance)` tuples.
 
 ## Assumptions and quirks

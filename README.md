@@ -3,9 +3,9 @@
 Parse Indian bank, card, broker and store statements into plain Python records.
 
 Each parser takes one file you downloaded or were emailed (a statement PDF, an Excel or CSV export, a saved web page,
-a saved receipt email) and returns a list of dataclasses. Where a file prints its own totals or row counts, the
-parser checks the rows against them and raises `ValueError` on a mismatch. Running balances on bank statements are
-checked by a separate helper, `checks.check_balance_chain`, which you call on the parsed rows (see below).
+a saved receipt email) and returns a list of dataclasses. Where a file carries its own totals, row counts or running
+balances, the parser checks the rows against them and raises `ValueError` on a mismatch, so a dropped row or a
+flipped sign fails loudly instead of slipping through.
 
 ## Supported sources
 
@@ -54,16 +54,12 @@ with TemporaryDirectory() as tmp:
     info = meta(hdfc, pdf)        # {"bin4": "..."}: which card this statement is for
 ```
 
-Bank statements carry a running balance on every row. Check that the rows chain before you trust them:
+`decrypted()` returns the file unchanged when it isn't actually encrypted, and refuses a `tmpdir` that would overwrite
+the original. Its errors name only the file, never the full path.
 
-```python
-from indian_finance_parsers.checks import check_balance_chain, order_by_balance
-
-rows = adapter("importers", "sbi_bank").parse(xlsx)
-opening = check_balance_chain(rows)   # raises ValueError at the first row that doesn't chain; None if no balances
-```
-
-`order_by_balance(rows)` re-orders same-day rows that a bank printed out of order. `icici_bank` already applies it.
+For your own adapters, `indian_finance_parsers.checks` has the reconciliation helpers the built-in bank parsers use:
+`check_balance_chain(rows)` (raises at the first row whose running balance doesn't chain; returns the opening balance)
+and `order_by_balance(rows)` (re-orders same-day rows a bank printed out of order).
 
 To see a file's structure without seeing its contents: `python -m indian_finance_parsers.peek FILE` (needs the
 `excel` extra).

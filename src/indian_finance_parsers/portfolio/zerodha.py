@@ -4,6 +4,7 @@ from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
+from indian_finance_parsers.checks import check_balance_chain
 from indian_finance_parsers.models import Holding, Trade, Txn
 
 QTY = ["Quantity Available", "Quantity Discrepant", "Quantity Pledged (Margin)", "Quantity Pledged (Loan)"]
@@ -22,7 +23,7 @@ def holdings(path, as_of: date | None = None, owner: str = "own") -> list[Holdin
         if hdr and "Symbol" in hdr and "ISIN" in hdr:
             break
     else:
-        raise ValueError(f"{path}: no Symbol/ISIN header row")
+        raise ValueError(f"{Path(path).name}: no Symbol/ISIN header row")
     ix = {h: i for i, h in enumerate(hdr)}
     out = []
     for r in rows:
@@ -39,7 +40,7 @@ def trades(path) -> list[Trade]:
         rows = list(csv.DictReader(f))
     bad = {r["trade_type"] for r in rows} - {"buy", "sell"}
     if bad:
-        raise ValueError(f"{path}: unexpected trade_type {sorted(bad)}")
+        raise ValueError(f"{Path(path).name}: unexpected trade_type {sorted(bad)}")
     return [Trade(r["trade_id"], date.fromisoformat(r["trade_date"]), r["symbol"], r["isin"], r["trade_type"],
                       Decimal(r["quantity"]), Decimal(r["price"]), r["exchange"]) for r in rows]
 
@@ -60,11 +61,13 @@ def closing(path) -> Decimal | None:
 
 
 def ledger(path) -> list[Txn]:
-    """Dated rows only (Opening/Closing Balance skipped); raises if Closing Balance disagrees with the last row."""
+    """Dated rows only (Opening/Closing Balance skipped); raises if the rows don't chain or Closing Balance disagrees
+    with the last row."""
     txns = [Txn(date.fromisoformat(r["posting_date"]), _dec(r["credit"]) - _dec(r["debit"]), r["particulars"],
                 _dec(r["net_balance"])) for r in _ledger_rows(path) if r["posting_date"]]
     end = closing(path)
     last = txns[-1].balance_after if txns else opening(path)
     if end is not None and end != last:
-        raise ValueError(f"{path}: closing balance {end} != last row balance {last}")
+        raise ValueError(f"{Path(path).name}: closing balance {end} != last row balance {last}")
+    check_balance_chain(txns)
     return txns

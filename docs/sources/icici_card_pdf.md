@@ -5,7 +5,8 @@ ICICI Bank credit cards, monthly PDF statement. Parser `importers/icici_card_pdf
 (plus `decrypt` to open the password-protected PDF).
 
 ## Official site
-<https://www.icicibank.com/>. Statements are also available in internet banking under Cards → Statements.
+<https://www.icicibank.com/>. Statements are also in Net Banking (Credit Cards → View Statement → Download PDF) and
+in the iMobile app (Cards & Forex → Manage → Statements).
 
 ## How the file arrives
 Monthly email attachment from the bank's credit card statements email. The filename names the card product:
@@ -15,7 +16,7 @@ Monthly email attachment from the bank's credit card statements email. The filen
 The `_NORM.pdf` statement attachment.
 
 ## Password
-Protected with the convention given in the statement email (built from your name and date of birth). Decrypt with
+Protected; the statement email and ICICI's credit-card statement help page state the convention. Decrypt with
 `indian_finance_parsers.decrypt.decrypted(path, password, tmpdir)`.
 
 ## What you get

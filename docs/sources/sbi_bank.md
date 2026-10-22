@@ -11,7 +11,8 @@ download as Excel.
 Portal download, named `AccountStatement_<...>.xlsx`.
 
 ## What to pick
-Excel format. One export holds at most 2,000 transactions, so a long history comes as several files.
+Excel format. Exports seen so far stop at 2,000 transactions each, so download a long history as several shorter
+periods.
 
 ## Password
 The Excel file is password-protected; the download screen states the convention. Decrypt with
@@ -25,4 +26,5 @@ The Excel file is password-protected; the download screen states the convention.
   Debit | Credit | Balance`.
 - Several date formats are accepted (`dd/mm/yyyy`, `dd-mm-yyyy`, `dd Mon yyyy`, ISO).
 - Wrapped details (a row with only the Details cell) are appended to the previous row.
-- The parser counts dated rows and raises `ValueError` if any were skipped before the footer.
+- The parser counts dated rows and raises `ValueError` if any were skipped before the footer, and checks that every
+  running balance chains from the one before it.

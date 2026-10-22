@@ -4,7 +4,8 @@
 PlayStation Store purchases. Parser `purchases/playstation`, base install.
 
 ## Official site
-<https://store.playstation.com/>. Transaction history is also under Account → Payment management on the PlayStation site.
+<https://store.playstation.com/>. Transaction history (two years by default) is also under Account Management →
+Transaction History on the PlayStation site; it doesn't replace the receipts, which carry the items and payment split.
 
 ## How the file arrives
 A receipt email ("Thank You For Your Purchase") for each order. Save the email body as `.html`; most mail clients can

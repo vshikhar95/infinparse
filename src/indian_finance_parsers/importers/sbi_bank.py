@@ -5,6 +5,7 @@ import re
 from datetime import datetime
 from decimal import Decimal
 
+from indian_finance_parsers.checks import check_balance_chain
 from indian_finance_parsers.models import Txn
 
 DATE_FORMATS = ("%d/%m/%Y", "%d-%m-%Y", "%d %b %Y", "%d-%b-%Y", "%d-%b-%y", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d")
@@ -46,6 +47,7 @@ def parse(path):
     expected = sum(1 for v in df.iloc[hdr + 1:, cols["Date"]] if _date(v))
     if len(txns) != expected:  # an early stop still passes the balance chain, so count explicitly
         raise ValueError(f"parsed {len(txns)} rows but sheet has {expected} dated rows")
+    check_balance_chain(txns)
     return txns
 
 

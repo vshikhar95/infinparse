@@ -18,17 +18,17 @@ self='^(scripts/pii_check\.sh|tests/test_pii_check\.py)$'
 
 # files the line scan below can't read: names it can't split, and binary files (zips, spreadsheets, PDFs)
 unscannable=0
-names=$( { git ls-files; git log --all --format= --name-only; } | sort -u)
-if bad=$(printf '%s\n' "$names" | grep -E ':|'$'\t'); then
-  printf '%s: unscannable file name\n' $bad; unscannable=1
-fi
+git() { command git -c core.quotePath=false "$@"; }  # print non-ASCII names as-is, not \-escaped
+while IFS= read -r f; do
+  echo "$f: unscannable file name"; unscannable=1
+done < <({ git ls-files; git log --all --format= --name-only; } | sort -u | grep -E ':|'$'\t' || true)
 text=$(git grep -I -l -e '' -- . || true)
-for f in $(git ls-files); do
-  [ -s "$f" ] && ! printf '%s\n' "$text" | grep -qxF "$f" && { echo "$f: binary file (not scannable)"; unscannable=1; }
-done
-if bin=$(git log --all --numstat --format= | awk -F'\t' '$1 == "-" { print $3 }' | sort -u | grep .); then
-  printf 'history %s: binary file (not scannable)\n' $bin; unscannable=1
-fi
+while IFS= read -r f; do
+  [ -s "$f" ] && ! printf '%s\n' "$text" | grep -qxF -- "$f" && { echo "$f: binary file (not scannable)"; unscannable=1; }
+done < <(git ls-files)
+while IFS= read -r f; do
+  echo "history $f: binary file (not scannable)"; unscannable=1
+done < <(git log --all --numstat --format= | awk -F'\t' '$1 == "-" { print $3 }' | sort -u)
 
 {
   { git grep -nI -e '' -- . || [ $? = 1 ]; } | sed -E 's/^([^:]*):([0-9]*):/\1:\2:\t/'
@@ -46,7 +46,12 @@ fi
     if (file ~ self) next
     low = tolower(text)
     kind = ""
-    if (text ~ /[A-Za-z0-9][A-Za-z0-9._%+-]*@[A-Za-z0-9.-]+\.[A-Za-z][A-Za-z]+/ && low !~ /noreply/) kind = "email"
+    s = text
+    while (match(s, /[A-Za-z0-9][A-Za-z0-9._%+-]*@[A-Za-z0-9.-]+\.[A-Za-z][A-Za-z]+/)) {
+      addr = tolower(substr(s, RSTART, RLENGTH)); s = substr(s, RSTART + RLENGTH)
+      if (addr !~ /noreply/) { kind = "email"; break }  # noreply addresses are fine, each judged on its own
+    }
+    if (kind != "") ;  # already a hit
     else if (text ~ /\/(Users|home)\//) kind = "home path"
     else if (low ~ /(^|[^a-z0-9])(mom|mum|dad|mother|father|wife|husband|sister|brother|inherited)([^a-z0-9]|$)/) kind = "relationship word"
     else {

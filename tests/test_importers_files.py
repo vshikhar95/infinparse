@@ -132,3 +132,21 @@ def test_sbi_bank_early_footer_drops_dated_row_raises(tmp_path):
     ])
     with pytest.raises(ValueError, match="parsed 1 rows but sheet has 2"):
         sbi_bank.parse(p)
+
+
+def test_icici_bank_broken_balance_chain_raises(tmp_path):
+    p = _icici_sheet(tmp_path, [
+        [1, "", "01/10/2026", "", "A", "0", "100", "100"],
+        [2, "", "02/10/2026", "", "B", "0", "50", "999"],
+    ])
+    with pytest.raises(ValueError, match="balance chain"):
+        icici_bank.parse(p)
+
+
+def test_sbi_bank_broken_balance_chain_raises(tmp_path):
+    p = _sbi_sheet(tmp_path, [
+        ["01/10/2026", "A", "", "", "100", "100"],
+        ["02/10/2026", "B", "", "", "50", "999"],
+    ])
+    with pytest.raises(ValueError, match="balance chain"):
+        sbi_bank.parse(p)

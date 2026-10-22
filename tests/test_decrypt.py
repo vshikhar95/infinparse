@@ -1,9 +1,29 @@
 import io
+import traceback
 
 import pikepdf
 import pytest
 
 from indian_finance_parsers.decrypt import decrypted
+
+
+def _printed(exc):
+    """What a crash would print: the full traceback, including any chained library error."""
+    return "".join(traceback.format_exception(exc))
+
+
+def _xlsx(path, password=None):
+    from msoffcrypto.format.ooxml import OOXMLFile
+    from openpyxl import Workbook
+    plain = io.BytesIO()
+    Workbook().save(plain)
+    if password is None:
+        path.write_bytes(plain.getvalue())
+        return path
+    plain.seek(0)
+    with open(path, "wb") as f:
+        OOXMLFile(plain).encrypt(password, f)
+    return path
 
 
 @pytest.fixture
@@ -30,18 +50,12 @@ def test_right_password(enc_pdf, tmp_path):
 def test_wrong_password(enc_pdf, tmp_path):
     with pytest.raises(ValueError, match="statement.pdf: wrong or missing password") as e:
         decrypted(enc_pdf, "wrong", tmp_path)
-    assert str(enc_pdf.parent) not in str(e.value)
-    assert e.value.__cause__ is None and e.value.__context__ is None  # no library traceback with the path
+    assert str(enc_pdf.parent) not in _printed(e.value)
 
 
 def test_wrong_password_office(tmp_path):
-    from msoffcrypto.format.ooxml import OOXMLFile
-    from openpyxl import Workbook
-    plain, enc = io.BytesIO(), tmp_path / "statement.xlsx"
-    Workbook().save(plain)
-    plain.seek(0)
-    with open(enc, "wb") as f:
-        OOXMLFile(plain).encrypt("right", f)
+    (tmp_path / "in").mkdir()
+    enc = _xlsx(tmp_path / "in" / "statement.xlsx", "right")
     with pytest.raises(ValueError, match="statement.xlsx: wrong or missing password"):
         decrypted(enc, "wrong", tmp_path)
     assert decrypted(enc, "right", tmp_path).read_bytes()[:2] == b"PK"
@@ -58,7 +72,7 @@ def test_corrupt_pdf_names_only_the_file(tmp_path):
     bad.write_bytes(b"%PDF-1.7 truncated")
     with pytest.raises(ValueError, match="statement.pdf: not a readable") as e:
         decrypted(bad, "pw", tmp_path)
-    assert "secret_dir" not in str(e.value) and e.value.__context__ is None
+    assert "secret_dir" not in _printed(e.value)
 
 
 def test_corrupt_office_file_names_only_the_file(tmp_path):
@@ -67,4 +81,24 @@ def test_corrupt_office_file_names_only_the_file(tmp_path):
     bad.write_bytes(b"not an office file")
     with pytest.raises(ValueError, match="statement.xlsx: not a readable") as e:
         decrypted(bad, "pw", tmp_path)
-    assert "secret_dir" not in str(e.value) and e.value.__context__ is None
+    assert "secret_dir" not in _printed(e.value)
+
+
+def test_unencrypted_files_pass_through_even_with_a_password(tmp_path):
+    (tmp_path / "in").mkdir()
+    xlsx = _xlsx(tmp_path / "in" / "plain.xlsx")
+    pdf = tmp_path / "in" / "plain.pdf"
+    with pikepdf.Pdf.new() as p:
+        p.add_blank_page()
+        p.save(pdf)
+    out = tmp_path / "out"
+    out.mkdir()
+    assert decrypted(xlsx, "pw", out) == xlsx
+    assert decrypted(pdf, "pw", out) == pdf
+
+
+def test_never_overwrites_the_original(enc_pdf):
+    with pytest.raises(ValueError, match="statement.pdf: tmpdir is the file's own folder"):
+        decrypted(enc_pdf, "right", enc_pdf.parent)
+    with pikepdf.open(enc_pdf, password="right") as pdf:
+        assert pdf.is_encrypted

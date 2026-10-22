@@ -3,7 +3,7 @@ import re
 from datetime import date
 from decimal import Decimal
 
-from indian_finance_parsers.checks import order_by_balance
+from indian_finance_parsers.checks import check_balance_chain, order_by_balance
 from indian_finance_parsers.models import Txn
 
 
@@ -41,7 +41,9 @@ def parse(path):
         raise ValueError(f"parsed {len(txns)} rows but sheet has {expected} numbered rows")
     if len(txns) > 1 and txns[0].date > txns[-1].date:
         txns.reverse()  # export can be newest-first; the balance chain needs oldest-first
-    return order_by_balance(txns)
+    txns = order_by_balance(txns)
+    check_balance_chain(txns)
+    return txns
 
 
 def meta(path):
