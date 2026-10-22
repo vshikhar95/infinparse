@@ -58,7 +58,8 @@ jobs:
   publish:
     needs: build
     runs-on: ubuntu-latest
-    environment: pypi  # PyPI's trusted publisher names this repo, release.yml and this environment
+    # one environment per package: PyPI requires each trusted publisher (repo + workflow + environment) to be unique
+    environment: pypi-${{ needs.build.outputs.package }}
     permissions:
       id-token: write  # Trusted Publishing: no stored token
     steps:

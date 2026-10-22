@@ -61,14 +61,15 @@ release-please was dropped.
 1. **`build`** (read-only token, no publishing rights): check out the tag; confirm the tagged commit is on `main`;
    test; `uv build --package <name>` from a clean checkout; check the members against the allowlist; upload `dist/`
    as an artifact.
-2. **`publish`** (environment `pypi`, `id-token: write` only, no checkout and no third-party code beyond the pinned
+2. **`publish`** (environment `pypi-<package>`, `id-token: write` only, no checkout and no third-party code beyond the pinned
    publish action): download the artifact and upload it with PyPI Trusted Publishing.
 3. **`github-release`** (`contents: write`): generate the notes from the merged PRs since that package's previous tag,
    run them through the PII gate, then create the GitHub release with `dist/` attached. The notes never reach PyPI
    (its page shows the README), so checking them after the upload is enough.
 
-PyPI's trusted-publisher entries name this repo, `release.yml` and the `pypi` environment. For the first release they
-are "pending publishers". The `pypi` environment has no reviewer, because a solo maintainer can't approve their own
+PyPI's trusted-publisher entries name this repo, `release.yml` and the package's own environment (`pypi-<package>`;
+PyPI rejects two publishers with the same repo, workflow and environment). For the first release they
+are "pending publishers". The `pypi-<package>` environments have no reviewer, because a solo maintainer can't approve their own
 run. Two things gate publishing instead: the tag ruleset (only the maintainer can create `*-v*` tags) and the
 environment's deployment rule (tags only, from this repo).
 
@@ -89,12 +90,13 @@ environment's deployment rule (tags only, from this repo).
 1. Push first to a **private** repo. Run `scripts/pii_check.sh <private denylist>`, then make the repo public.
 2. Branch ruleset on `main`: PRs required, the CI jobs required, no force-push or deletion. Tag ruleset on `*-v*`:
    only you may create, update or delete.
-3. Environment `pypi`: deployment allowed from `*-v*` tags only.
+3. Environments `pypi-indian-finance-parsers` and `pypi-purchase-history-parsers`: deployment allowed from `*-v*`
+   tags only.
 4. Actions settings: allow GitHub-owned actions plus the pinned third-party ones; require approval for outside
    contributors' workflow runs; default token read-only.
 5. Turn on secret scanning and push protection, Dependabot alerts, private vulnerability reporting, and CodeQL
    default setup.
-6. PyPI: add a pending trusted publisher for each package (this repo, `release.yml`, environment `pypi`). Use a
+6. PyPI: add a pending trusted publisher for each package (this repo, `release.yml`, environment `pypi-<package>`). Use a
    hardware-key 2FA on GitHub and PyPI.
 
 ## Not doing
