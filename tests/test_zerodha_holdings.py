@@ -20,13 +20,13 @@ def _holdings_xlsx(tmp_path):
               ["TESTBANK", "INE000X01029", "BANKING", 3, 0, 0, 0, 1, 200, 210, 0, 0],
               [None, None, "Total", 16],
               ["Notes: invented"]]:
-        wb.active.append(r)
+        wb.active.append([None, *r])  # the real export starts in column B
     wb.save(p)
     return p
 
 
 def test_holdings(tmp_path):
-    rows = zerodha_holdings.parse(_holdings_xlsx(tmp_path), as_of=date(2026, 10, 20))
+    rows = zerodha_holdings.parse(_holdings_xlsx(tmp_path))
     assert [(r.name, r.isin, r.units, r.price, r.value) for r in rows] == [
         ("FAKECO", "INE000X01011", D(13), D("150.5"), D("1956.5")),
         ("TESTBANK", "INE000X01029", D(4), D(210), D(840))]
@@ -46,8 +46,19 @@ def test_account_is_empty_when_the_file_prints_none(tmp_path):
     assert {r.account for r in zerodha_holdings.parse(p)} == {""}
 
 
-def test_as_of_defaults_to_mtime(tmp_path):
+def test_as_of_is_the_statement_date_the_file_prints(tmp_path):
     p = _holdings_xlsx(tmp_path)
+    os.utime(p, (1_800_000_000, 1_800_000_000))
+    assert zerodha_holdings.parse(p)[0].as_of == date(2026, 10, 20)
+
+
+def test_without_a_printed_date_as_of_falls_back_to_the_argument_then_mtime(tmp_path):
+    from openpyxl import load_workbook
+    p = _holdings_xlsx(tmp_path)
+    wb = load_workbook(p)
+    wb.active.delete_rows(1)
+    wb.save(p)
+    assert zerodha_holdings.parse(p, as_of=date(2026, 1, 2))[0].as_of == date(2026, 1, 2)
     os.utime(p, (1_800_000_000, 1_800_000_000))
     assert zerodha_holdings.parse(p)[0].as_of == date.fromtimestamp(1_800_000_000)
 

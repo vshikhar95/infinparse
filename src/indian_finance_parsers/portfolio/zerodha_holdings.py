@@ -1,4 +1,5 @@
 """Zerodha Console holdings export (holdings-<client id>.xlsx). Needs the `excel` extra (openpyxl)."""
+import re
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -13,19 +14,22 @@ def _dec(v) -> Decimal:
 
 
 def parse(path, as_of: date | None = None) -> list[Holding]:
-    """Rows under the Symbol/ISIN header until the first blank Symbol; as_of defaults to the file's mtime
-    (the export carries no valuation date of its own). account = the Client ID in the preamble, or ""."""
+    """Rows under the Symbol/ISIN header until the first blank Symbol. From the preamble: account = the Client ID,
+    or ""; as_of = the "Statement as on YYYY-MM-DD" date, else the as_of argument, else the file's mtime."""
     from openpyxl import load_workbook
-    as_of = as_of or date.fromtimestamp(Path(path).stat().st_mtime)
     rows = iter(load_workbook(path, data_only=True).active.iter_rows(values_only=True))
-    client = ""
+    client, printed = "", None
     for hdr in rows:
-        if hdr and hdr[0] == "Client ID":
-            client = str(hdr[1] or "")
-        if hdr and "Symbol" in hdr and "ISIN" in hdr:
+        cells = [c for c in hdr or () if c is not None]  # the export starts in column B, so find labels anywhere
+        if "Client ID" in cells[:-1]:
+            client = str(cells[cells.index("Client ID") + 1])
+        if m := next((re.search(r"as on (\d{4}-\d\d-\d\d)", c) for c in cells if isinstance(c, str) and "as on" in c), None):
+            printed = date.fromisoformat(m[1])
+        if "Symbol" in cells and "ISIN" in cells:
             break
     else:
         raise ValueError(f"{Path(path).name}: no Symbol/ISIN header row")
+    as_of = printed or as_of or date.fromtimestamp(Path(path).stat().st_mtime)
     ix = {h: i for i, h in enumerate(hdr)}
     out = []
     for r in rows:
