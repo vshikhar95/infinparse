@@ -78,5 +78,5 @@ def check_totals(text, txns):
 
 def meta(path):
     """First 4 card digits from the statement filename ('NNNNXXXXXXXXXXNN_DD-MM-YYYY.PDF'): which card this is."""
-    m = re.search(r"(\d{4})X+\d\d_\d\d-\d\d-\d{4}", str(path))
+    m = re.search(r"(\d{4})X+\d\d_\d\d-\d\d-\d{4}", str(getattr(path, "name", path)))  # a path or a decrypted file
     return {"bin4": m[1] if m else ""}

@@ -70,3 +70,18 @@ def test_no_header_raises_naming_only_the_file(tmp_path):
     wb.save(p)
     with pytest.raises(ValueError, match="^holdings.xlsx: no Symbol/ISIN header row"):
         zerodha_holdings.parse(p)
+
+
+def test_in_memory_file_without_a_printed_date_needs_as_of(tmp_path):
+    import io
+    from openpyxl import load_workbook
+    p = _holdings_xlsx(tmp_path)
+    wb = load_workbook(p)
+    wb.active.delete_rows(1)
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.name = "holdings-AB1234.xlsx"
+    with pytest.raises(ValueError, match="pass as_of"):
+        zerodha_holdings.parse(buf)
+    buf.seek(0)
+    assert zerodha_holdings.parse(buf, as_of=date(2026, 1, 2))[0].as_of == date(2026, 1, 2)

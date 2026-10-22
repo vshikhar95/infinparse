@@ -28,7 +28,9 @@ def parse(path, as_of: date | None = None) -> list[Holding]:
         if "Symbol" in cells and "ISIN" in cells:
             break
     else:
-        raise ValueError(f"{Path(path).name}: no Symbol/ISIN header row")
+        raise ValueError(f"{Path(getattr(path, 'name', path)).name}: no Symbol/ISIN header row")
+    if not (printed or as_of or isinstance(path, (str, Path))):
+        raise ValueError(f"{getattr(path, 'name', 'file')}: no statement date in the file; pass as_of")
     as_of = printed or as_of or date.fromtimestamp(Path(path).stat().st_mtime)
     ix = {h: i for i, h in enumerate(hdr)}
     out = []

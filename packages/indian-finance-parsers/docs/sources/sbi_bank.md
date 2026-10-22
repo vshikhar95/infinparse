@@ -16,7 +16,7 @@ periods.
 
 ## Password
 The Excel file is password-protected; the download screen states the convention. Decrypt with
-`indian_finance_parsers.decrypt.decrypted(path, password, tmpdir)`.
+`indian_finance_parsers.decrypt.decrypted(path, password)` (in memory; nothing is written to disk).
 
 ## What you get
 `list[Txn]` oldest first, with `balance_after` on every row; + credit, − debit. `meta()` returns `{}`.

@@ -17,7 +17,7 @@ The `_NORM.pdf` statement attachment.
 
 ## Password
 Protected; the statement email and ICICI's credit-card statement help page state the convention. Decrypt with
-`indian_finance_parsers.decrypt.decrypted(path, password, tmpdir)`.
+`indian_finance_parsers.decrypt.decrypted(path, password)` (in memory; nothing is written to disk).
 
 ## What you get
 `list[Txn]` sorted by date; − charge, + credit (rows ending `CR`). `notes` names the add-on card for rows under an

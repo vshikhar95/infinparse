@@ -16,7 +16,7 @@ The statement PDF as attached; keep the original filename, because `meta()` read
 
 ## Password
 Protected; the statement email states the convention. Decrypt with
-`indian_finance_parsers.decrypt.decrypted(path, password, tmpdir)`.
+`indian_finance_parsers.decrypt.decrypted(path, password)` (in memory; nothing is written to disk).
 
 ## What you get
 `list[Txn]` sorted by date; − charge, + credit. `meta()` returns `{"bin4": ...}`, the first 4 card digits from the

@@ -39,21 +39,18 @@ The base install needs only `pdfplumber`. The extras are `excel` (pandas, xlrd, 
 `decrypt` (pikepdf, msoffcrypto-tool) and `all`.
 
 ```python
-from pathlib import Path
-from tempfile import TemporaryDirectory
-
 from indian_finance_parsers import adapter, meta
 from indian_finance_parsers.decrypt import decrypted
 
 hdfc = adapter("importers", "hdfc_card")
-with TemporaryDirectory() as tmp:
-    pdf = decrypted(Path("statement.PDF"), password="...", tmpdir=Path(tmp))  # password=None if not protected
-    rows = hdfc.parse(pdf)        # list[Txn]
-    info = meta(hdfc, pdf)        # {"bin4": "..."}: which card this statement is for
+src = decrypted("statement.PDF", password="...")  # password=None if the file isn't protected
+rows = hdfc.parse(src)        # list[Txn]
+info = meta(hdfc, src)        # {"bin4": "..."}: which card this statement is for
 ```
 
-`decrypted()` returns the file unchanged when it isn't actually encrypted, and refuses a `tmpdir` that would overwrite
-the original. Its errors name only the file, never the full path.
+`decrypted()` decrypts in memory: it returns an in-memory file (named like the original) that every PDF and Excel
+parser accepts, so the plaintext never touches disk. It returns the path unchanged when there's no password or the
+file isn't actually encrypted. Its errors name only the file, never the full path.
 
 For your own adapters, `indian_finance_parsers.checks` has the reconciliation helpers the built-in bank parsers use:
 `check_balance_chain(rows)` (raises at the first row whose running balance doesn't chain; returns the opening balance)

@@ -79,5 +79,5 @@ def check_totals(summary, txns):
 
 
 def meta(path):
-    m = re.search(r"_Retail_(\w+?)_", str(path))
+    m = re.search(r"_Retail_(\w+?)_", str(getattr(path, "name", path)))  # a path or a decrypted file
     return {"product": m[1] if m else "Unknown"}
