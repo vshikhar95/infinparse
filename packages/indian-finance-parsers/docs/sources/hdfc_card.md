@@ -28,5 +28,8 @@ filename (empty if the filename was changed), so each card can map to its own ac
 - Rows are rebuilt from word positions. The reward-points (NeuCoins) column is dropped by its x position, so a `+`
   in that column is not read as a credit.
 - A long description can be printed on the lines above and below a dated row; it is joined back.
+- A leading `EMI ` before the merchant marks a charge that is merely *eligible* for EMI conversion (the statement's
+  legend says so). It's still an ordinary charge, so the marker is removed from `description` and `notes` says
+  `"EMI eligible"`.
 - The rows are reconciled against amounts printed in the statement, and finance charges are allowed for.
   A mismatch raises `ValueError`.

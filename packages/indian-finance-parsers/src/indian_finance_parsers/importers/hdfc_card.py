@@ -55,9 +55,12 @@ def rows_from_words(rows, coins_x):
         if not body:  # a long description is printed on the lines above and below the dated line instead
             body = [w for k in (n - 1, n + 1) if 0 <= k < len(rows) and not DATE.match(rows[k][0]["text"])
                     for w in rows[k]]
+        # "EMI " before a merchant marks a charge as merely eligible for EMI conversion (statement legend); it is
+        # still an ordinary charge, so the marker moves to notes. A lone "EMI" word is left alone.
+        emi = len(body) > 1 and body[0]["text"] == "EMI"
         txns.append(Txn(date=datetime.strptime(m[1], "%d/%m/%Y").date(),
                         amount=amount if credit else -amount,
-                        description=" ".join(w["text"] for w in body)))
+                        description=" ".join(w["text"] for w in body[emi:]), notes="EMI eligible" if emi else ""))
     return txns
 
 

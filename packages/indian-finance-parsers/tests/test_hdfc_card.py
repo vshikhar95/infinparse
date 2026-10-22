@@ -69,3 +69,19 @@ def test_description_wrapped_above_and_below_a_bare_payment_row_is_kept():
             [w("04/09/2026|", 20), w("10:00", 80), w("SHOP", 120), w("C", 390), w("99.00", 400)]]
     assert [(t.amount, t.description) for t in hdfc.rows_from_words(rows, coins_x=None)] == [
         (D("12000.00"), "BPPY CC PAYMENT (Ref# ST0000001)"), (D("-99.00"), "SHOP")]
+
+
+def test_emi_eligible_marker_is_stripped_and_noted():
+    # HDFC prints "EMI " before any charge that may be converted to EMI; it is still an ordinary charge
+    w = lambda t, x: {"text": t, "x0": x}
+    rows = [[w("04/09/2026|", 20), w("10:00", 80), w("EMI", 120), w("TESTMART", 150), w("CITY", 210),
+             w("C", 390), w("2,518.24", 400)],
+            [w("05/09/2026|", 20), w("10:00", 80), w("SHOP", 120), w("C", 390), w("99.00", 400)]]
+    assert [(t.amount, t.description, t.notes) for t in hdfc.rows_from_words(rows, coins_x=None)] == [
+        (D("-2518.24"), "TESTMART CITY", "EMI eligible"), (D("-99.00"), "SHOP", "")]
+
+
+def test_a_lone_emi_word_is_not_a_marker():
+    w = lambda t, x: {"text": t, "x0": x}
+    rows = [[w("04/09/2026|", 20), w("10:00", 80), w("EMI", 120), w("C", 390), w("50.00", 400)]]
+    assert [(t.description, t.notes) for t in hdfc.rows_from_words(rows, coins_x=None)] == [("EMI", "")]
