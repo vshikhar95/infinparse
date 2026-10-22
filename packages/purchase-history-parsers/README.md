@@ -3,19 +3,19 @@
 Parse store purchase histories into plain Python records: what you bought, when, for how much, and how you paid,
 going as far back as each store's own history.
 
-Part of [infinparse](../../README.md). Each parser takes one file you exported from your own account and returns a
+Part of [infinparse](https://github.com/vshikhar95/infinparse/blob/main/README.md). Each parser takes one file you exported from your own account and returns a
 list of `Purchase` dataclasses. No parser logs in or makes network calls. For stores with no export button, the
-[browser exporters](exporters/) produce the file from your own logged-in browser session.
+[browser exporters](https://github.com/vshikhar95/infinparse/blob/main/packages/purchase-history-parsers/exporters) produce the file from your own logged-in browser session.
 
 ## Supported stores
 
 | Store | File you need | How to get it | Parser | Runbook |
 |---|---|---|---|---|
-| Steam | purchase-history page, saved as HTML | [exporter](exporters/steam.user.js) | `steam` | [docs/sources/steam.md](docs/sources/steam.md) |
-| Google Play | order-history page, saved as HTML | [exporter](exporters/google_play.user.js) | `google_play` | [docs/sources/google_play.md](docs/sources/google_play.md) |
-| Humble Bundle | `humble-orders.PERSONAL.json` | [exporter](exporters/humble.user.js) | `humble` | [docs/sources/humble.md](docs/sources/humble.md) |
-| Amazon | `Your Orders.zip` | Amazon's data request | `amazon` | [docs/sources/amazon.md](docs/sources/amazon.md) |
-| PlayStation Store | receipt email saved as `.html` | your mail client | `playstation` | [docs/sources/playstation.md](docs/sources/playstation.md) |
+| Steam | purchase-history page, saved as HTML | [exporter](https://github.com/vshikhar95/infinparse/blob/main/packages/purchase-history-parsers/exporters/steam.user.js) | `steam` | [docs/sources/steam.md](https://github.com/vshikhar95/infinparse/blob/main/packages/purchase-history-parsers/docs/sources/steam.md) |
+| Google Play | order-history page, saved as HTML | [exporter](https://github.com/vshikhar95/infinparse/blob/main/packages/purchase-history-parsers/exporters/google_play.user.js) | `google_play` | [docs/sources/google_play.md](https://github.com/vshikhar95/infinparse/blob/main/packages/purchase-history-parsers/docs/sources/google_play.md) |
+| Humble Bundle | `humble-orders.PERSONAL.json` | [exporter](https://github.com/vshikhar95/infinparse/blob/main/packages/purchase-history-parsers/exporters/humble.user.js) | `humble` | [docs/sources/humble.md](https://github.com/vshikhar95/infinparse/blob/main/packages/purchase-history-parsers/docs/sources/humble.md) |
+| Amazon | `Your Orders.zip` | Amazon's data request | `amazon` | [docs/sources/amazon.md](https://github.com/vshikhar95/infinparse/blob/main/packages/purchase-history-parsers/docs/sources/amazon.md) |
+| PlayStation Store | receipt email saved as `.html` | your mail client | `playstation` | [docs/sources/playstation.md](https://github.com/vshikhar95/infinparse/blob/main/packages/purchase-history-parsers/docs/sources/playstation.md) |
 
 Any currency works; each row keeps the currency the store shows. Some parsers expect English-language pages; see each
 runbook.
@@ -69,4 +69,4 @@ masked structure instead.
 
 ## Licence
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](https://github.com/vshikhar95/infinparse/blob/main/packages/purchase-history-parsers/LICENSE).

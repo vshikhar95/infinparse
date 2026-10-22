@@ -2,7 +2,7 @@
 
 Parse Indian bank, card, broker and fund statements into plain Python records.
 
-Part of [infinparse](../../README.md); store purchase histories live in its sibling package [purchase-history-parsers](../purchase-history-parsers/).
+Part of [infinparse](https://github.com/vshikhar95/infinparse/blob/main/README.md); store purchase histories live in its sibling package [purchase-history-parsers](https://github.com/vshikhar95/infinparse/blob/main/packages/purchase-history-parsers).
 
 Each parser takes one file you downloaded or were emailed (a statement PDF, an Excel or CSV export, a saved web page,
 a statement saved from a web page) and returns a list of dataclasses. Where a file carries its own totals, row counts or running
@@ -13,19 +13,19 @@ flipped sign fails loudly instead of slipping through.
 
 | Source | File you need | How it arrives | Parser | Extra | Runbook |
 |---|---|---|---|---|---|
-| ICICI Bank savings | `OpTransactionHistory*.xls` | download | `importers/icici_bank` | `excel` | [docs/sources/icici_bank.md](docs/sources/icici_bank.md) |
-| ICICI credit card | `CreditCardStatement*.csv` | download | `importers/icici_card` | – | [docs/sources/icici_card.md](docs/sources/icici_card.md) |
-| ICICI credit card | statement PDF | monthly email | `importers/icici_card_pdf` | `decrypt` | [docs/sources/icici_card_pdf.md](docs/sources/icici_card_pdf.md) |
-| HDFC credit card | statement PDF | monthly email | `importers/hdfc_card` | `decrypt` | [docs/sources/hdfc_card.md](docs/sources/hdfc_card.md) |
-| SBI savings | `AccountStatement_*.xlsx` | download | `importers/sbi_bank` | `excel`, `decrypt` | [docs/sources/sbi_bank.md](docs/sources/sbi_bank.md) |
-| SBI Card | `Transaction_history.pdf` | download | `importers/sbi_card` | – | [docs/sources/sbi_card.md](docs/sources/sbi_card.md) |
-| SBI PPF | saved transactions page | saved page | `importers/sbi_ppf`, `portfolio/sbi_ppf` | – | [docs/sources/sbi_ppf.md](docs/sources/sbi_ppf.md) |
-| Zerodha funds ledger | `ledger-*.csv` | download | `importers/zerodha_ledger` | – | [docs/sources/zerodha_ledger.md](docs/sources/zerodha_ledger.md) |
-| Zerodha holdings | `holdings-*.xlsx` | download | `portfolio/zerodha_holdings` | `excel` | [docs/sources/zerodha_holdings.md](docs/sources/zerodha_holdings.md) |
-| Zerodha tradebook | `tradebook-*.csv` | download | `trades/zerodha_tradebook` | – | [docs/sources/zerodha_tradebook.md](docs/sources/zerodha_tradebook.md) |
-| Mutual funds (CAMS/KFintech CAS) | CAS PDF | email on request | `portfolio/cas` | `cas` | [docs/sources/cas.md](docs/sources/cas.md) |
-| Sovereign Gold Bonds | RBI certificate PDF | email / download | `portfolio/sgb` | – | [docs/sources/sgb.md](docs/sources/sgb.md) |
-| Shriram Finance FD | deposit receipt PDF | email / download | `portfolio/shriram` | `decrypt` | [docs/sources/shriram.md](docs/sources/shriram.md) |
+| ICICI Bank savings | `OpTransactionHistory*.xls` | download | `importers/icici_bank` | `excel` | [docs/sources/icici_bank.md](https://github.com/vshikhar95/infinparse/blob/main/packages/indian-finance-parsers/docs/sources/icici_bank.md) |
+| ICICI credit card | `CreditCardStatement*.csv` | download | `importers/icici_card` | – | [docs/sources/icici_card.md](https://github.com/vshikhar95/infinparse/blob/main/packages/indian-finance-parsers/docs/sources/icici_card.md) |
+| ICICI credit card | statement PDF | monthly email | `importers/icici_card_pdf` | `decrypt` | [docs/sources/icici_card_pdf.md](https://github.com/vshikhar95/infinparse/blob/main/packages/indian-finance-parsers/docs/sources/icici_card_pdf.md) |
+| HDFC credit card | statement PDF | monthly email | `importers/hdfc_card` | `decrypt` | [docs/sources/hdfc_card.md](https://github.com/vshikhar95/infinparse/blob/main/packages/indian-finance-parsers/docs/sources/hdfc_card.md) |
+| SBI savings | `AccountStatement_*.xlsx` | download | `importers/sbi_bank` | `excel`, `decrypt` | [docs/sources/sbi_bank.md](https://github.com/vshikhar95/infinparse/blob/main/packages/indian-finance-parsers/docs/sources/sbi_bank.md) |
+| SBI Card | `Transaction_history.pdf` | download | `importers/sbi_card` | – | [docs/sources/sbi_card.md](https://github.com/vshikhar95/infinparse/blob/main/packages/indian-finance-parsers/docs/sources/sbi_card.md) |
+| SBI PPF | saved transactions page | saved page | `importers/sbi_ppf`, `portfolio/sbi_ppf` | – | [docs/sources/sbi_ppf.md](https://github.com/vshikhar95/infinparse/blob/main/packages/indian-finance-parsers/docs/sources/sbi_ppf.md) |
+| Zerodha funds ledger | `ledger-*.csv` | download | `importers/zerodha_ledger` | – | [docs/sources/zerodha_ledger.md](https://github.com/vshikhar95/infinparse/blob/main/packages/indian-finance-parsers/docs/sources/zerodha_ledger.md) |
+| Zerodha holdings | `holdings-*.xlsx` | download | `portfolio/zerodha_holdings` | `excel` | [docs/sources/zerodha_holdings.md](https://github.com/vshikhar95/infinparse/blob/main/packages/indian-finance-parsers/docs/sources/zerodha_holdings.md) |
+| Zerodha tradebook | `tradebook-*.csv` | download | `trades/zerodha_tradebook` | – | [docs/sources/zerodha_tradebook.md](https://github.com/vshikhar95/infinparse/blob/main/packages/indian-finance-parsers/docs/sources/zerodha_tradebook.md) |
+| Mutual funds (CAMS/KFintech CAS) | CAS PDF | email on request | `portfolio/cas` | `cas` | [docs/sources/cas.md](https://github.com/vshikhar95/infinparse/blob/main/packages/indian-finance-parsers/docs/sources/cas.md) |
+| Sovereign Gold Bonds | RBI certificate PDF | email / download | `portfolio/sgb` | – | [docs/sources/sgb.md](https://github.com/vshikhar95/infinparse/blob/main/packages/indian-finance-parsers/docs/sources/sgb.md) |
+| Shriram Finance FD | deposit receipt PDF | email / download | `portfolio/shriram` | `decrypt` | [docs/sources/shriram.md](https://github.com/vshikhar95/infinparse/blob/main/packages/indian-finance-parsers/docs/sources/shriram.md) |
 
 The `decrypt` extra is needed only to open password-protected files; the parser itself reads the decrypted copy.
 
@@ -102,8 +102,8 @@ All test fixtures are synthetic, and CI runs a PII check over the tree and the f
 
 Write a module with `parse(path)` (and optionally `meta(path)`) anywhere on your Python path, then use it by its
 dotted path: `adapter("importers", "mypkg.mybank")`. No fork or registration is needed. To contribute one, add the
-module, a synthetic fixture, a test and a runbook; see [docs/writing-an-adapter.md](docs/writing-an-adapter.md).
-[examples/sources.example.toml](examples/sources.example.toml) shows one way a pipeline can map files to parsers.
+module, a synthetic fixture, a test and a runbook; see [docs/writing-an-adapter.md](https://github.com/vshikhar95/infinparse/blob/main/packages/indian-finance-parsers/docs/writing-an-adapter.md).
+[examples/sources.example.toml](https://github.com/vshikhar95/infinparse/blob/main/packages/indian-finance-parsers/examples/sources.example.toml) shows one way a pipeline can map files to parsers.
 
 ## Scope
 
@@ -121,4 +121,4 @@ can call these parsers from its `extract()`.
 
 ## Licence
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](https://github.com/vshikhar95/infinparse/blob/main/packages/indian-finance-parsers/LICENSE).
