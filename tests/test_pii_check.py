@@ -130,3 +130,10 @@ def test_names_with_spaces_are_reported_whole(repo):
     git(repo, "commit", "-qm", "c")
     r = check(repo)
     assert "my orders.zip: binary file" in r.stdout and "history my orders.zip: binary file" in r.stdout
+
+
+def test_pr_text_from_the_environment_is_scanned(repo):
+    commit(repo, "a.py", "x = 1\n")
+    env = {**__import__("os").environ, "PII_TEXT": "Fix parser\n\nmy statement for someone@gmail.com"}
+    r = subprocess.run(["bash", str(SCRIPT)], cwd=repo, capture_output=True, text=True, env=env)
+    assert r.returncode == 1 and "pr-text:3: email" in r.stdout and "someone" not in r.stdout

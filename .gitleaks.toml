@@ -1,0 +1,48 @@
+# Gitleaks config for CI: the default secret rules plus Indian personal identifiers. Synthetic test values are
+# allowlisted by exact value (not by file), so a real identifier added to a fixture is still caught.
+title = "infinparse"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "pan"
+description = "Indian PAN (5 letters, 4 digits, 1 letter; 4th letter is the holder type)"
+regex = '''\b[A-Z]{3}[ABCFGHJLPT][A-Z][0-9]{4}[A-Z]\b'''
+
+[[rules]]
+id = "aadhaar"
+description = "Aadhaar number, plain or grouped 4-4-4"
+regex = '''\b[2-9][0-9]{3}[ -]?[0-9]{4}[ -]?[0-9]{4}\b'''
+
+[[rules]]
+id = "ifsc"
+description = "Indian bank branch IFSC code"
+regex = '''\b[A-Z]{4}0[A-Z0-9]{6}\b'''
+
+[[rules]]
+id = "upi-id"
+description = "UPI ID (handle@bank)"
+regex = '''\b[a-zA-Z0-9._-]{2,64}@(?:okaxis|okhdfcbank|okicici|oksbi|ybl|ibl|axl|paytm|apl|upi|ptyes|ptsbi|pthdfc|ptaxis|axisbank|icici|sbi|hdfcbank|kotak|yesbank|idfcbank|federal|indus|rbl|aubank|jupiteraxis|fam|slice|freecharge|airtel|jio|postbank)\b'''
+
+[[rules]]
+id = "indian-mobile"
+description = "Indian mobile number (+91 / 0 prefix optional, spaced or not)"
+regex = '''(?:\+91[ -]?|\b0)?\b[6-9][0-9]{4}[ -]?[0-9]{5}\b'''
+
+[[rules]]
+id = "masked-card"
+description = "Card number with the middle masked, or a trailing card fragment like **1234"
+regex = '''\b[0-9]{4}[ ]?[Xx*]{2,4}[ ]?[Xx*]{0,4}[ ]?[Xx*]{0,4}[ ]?[0-9]{2,4}\b|\*\*[ ]?[0-9]{2,4}\b'''
+
+# Synthetic values in fixtures and tests, by exact value. Anything else, including a different card ending, is caught.
+[[allowlists]]
+description = "synthetic test values"
+regexTarget = "secret"
+regexes = [
+  '''^4111 XXXX XXXX (1111|2222|111)$''',
+  '''^4111(\*{8}|X{8})(1111|2222)$''',
+  '''^\*\* ?11$''',
+  '''^444444444444$''',
+  '''^222222222222222$''',
+]

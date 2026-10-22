@@ -1,8 +1,9 @@
 # synthetic emails in the PII gate's own tests (they prove the gate catches an address)
-tests/test_pii_check.py:email-address:109
+tests/test_pii_check.py:email-address:123
 # synthetic PlayStation receipts: repeated-digit order numbers and 4111 test cards (the parser's masked-card format)
 packages/purchase-history-parsers/tests/fixtures/psn/old_format.html:aadhaar:2
 packages/purchase-history-parsers/tests/fixtures/psn/paid_card.html:masked-card-or-account:5
 packages/purchase-history-parsers/tests/fixtures/psn/subscription.html:payment-card-number:2
 packages/purchase-history-parsers/tests/fixtures/psn/subscription.html:masked-card-or-account:4
 packages/purchase-history-parsers/tests/test_playstation.py:aadhaar:41
+tests/test_pii_check.py:email-address:137

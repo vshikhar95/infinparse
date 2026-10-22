@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # PII gate: scan tracked files and all of `git log -p` for personal data.
-# Usage: scripts/pii_check.sh [DENYLIST]
+# Usage: scripts/pii_check.sh [DENYLIST]     (set PII_TEXT to also scan a PR title and body)
 #   Generic patterns always run: email addresses (noreply ones allowed), /Users/ or /home/ paths, 10+ digit runs
 #   (except test-card 4111…, 0000…, 1234567… and one-repeated-digit runs), and family-relationship words.
 #   DENYLIST: optional file of terms to reject (one per line, case-insensitive) — keep it outside this repo.
@@ -32,10 +32,13 @@ done < <(git log --all --numstat --format= | awk -F'\t' '$1 == "-" { print $3 }'
 
 {
   { git grep -nI -e '' -- . || [ $? = 1 ]; } | sed -E 's/^([^:]*):([0-9]*):/\1:\2:\t/'
-  git log -p --all --no-color | awk -v self="$self" '
+  # -m: also diff merge commits against each parent (catches PII added and later removed only via merges)
+  git log -p -m --all --no-color | awk -v self="$self" '
     /^commit [0-9a-f]{40}/ { c = substr($2, 1, 7); f = ""; next }
     /^diff --git / { f = substr($4, 3); next }
     f !~ self { print "history " c " " f ":\t" $0 }'
+  # PR title and body (CI passes them in PII_TEXT through env, never interpolated into the command line)
+  if [ -n "${PII_TEXT:-}" ]; then printf '%s\n' "$PII_TEXT" | awk '{ print "pr-text:" NR ":\t" $0 }'; fi
 } | awk -F'\t' -v self="$self" -v deny="$deny" '
   BEGIN {
     while ((getline t < deny) > 0) { gsub(/^[ \t]+|[ \t\r]+$/, "", t); if (t != "") terms[tolower(t)] }
