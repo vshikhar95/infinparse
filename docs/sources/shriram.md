@@ -17,7 +17,8 @@ Some receipts are protected, with the convention stated in the email. Decrypt fi
 
 ## What you get
 `parse(path) -> list[Holding]`: one holding per deposit, as the receipt states it: dated at the deposit date, valued at
-the deposit amount, `account` = the deposit number, `matures` = the maturity date. The name carries the rate and the
+the deposit amount, `account` = the deposit number, `matures` = the maturity date, `nominee` = the nominee as printed
+(`"NA"` when the receipt says none). The name carries the rate and the
 maturity amount. Whether a deposit has matured, and what it is worth today, is your judgement.
 
 ## Assumptions and quirks

@@ -34,3 +34,9 @@ def test_not_a_receipt_raises():
     import pytest
     with pytest.raises(ValueError, match="not a Shriram FD receipt"):
         shriram.holding_from_text("some other pdf")
+
+
+def test_nominee_as_the_receipt_prints_it():
+    assert shriram.holding_from_text(RECEIPT + "Nominee : TEST NOMINEE\n").nominee == "TEST NOMINEE"
+    assert shriram.holding_from_text(RECEIPT + "Nominee : N.A.\n").nominee == "NA"  # receipt says there is none
+    assert shriram.holding_from_text(RECEIPT).nominee == ""  # receipt doesn't say

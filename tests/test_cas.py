@@ -12,6 +12,7 @@ CAS = {
     "statement_period": {"from_": "01-Jan-2020", "to": "20-Oct-2026"},
     "folios": [{"amc": "Acme MF", "folio": "1234567/89", "schemes": [
         {"scheme": "Acme Growth Fund - Direct Growth", "isin": "INF000X01011", "close": 10.5,
+         "nominees": ["TEST NOMINEE ONE", "TEST NOMINEE TWO"],
          "valuation": {"date": "2026-10-20", "nav": 100.25, "value": 1052.63}, "transactions": []},
         {"scheme": "Acme Liquid Fund", "isin": "INF000X01029", "close": 2,
          "valuation": {"date": "2026-10-20", "nav": 50, "value": 100}, "transactions": []},
@@ -63,3 +64,7 @@ def test_wrong_password_names_only_the_file(monkeypatch):
     with pytest.raises(ValueError, match="cas.pdf: wrong or missing password") as e:
         cas.parse(pdf, password="wrong")
     assert "secret_dir" not in "".join(traceback.format_exception(e.value))
+
+
+def test_nominees_as_the_statement_prints_them(seen):
+    assert [r.nominee for r in cas.parse("cas.pdf")] == ["TEST NOMINEE ONE; TEST NOMINEE TWO", "", ""]

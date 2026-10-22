@@ -19,7 +19,7 @@ The password you choose when you request the statement. Pass it as `parse(path, 
 
 ## What you get
 `parse(path, password=None) -> list[Holding]`: one holding per scheme, valued at the statement's valuation date, with
-`account` = the folio number. A fully redeemed scheme is kept with units 0 and value 0, so a later snapshot shows the
+`account` = the folio number and `nominee` = the scheme's nominees as printed. A fully redeemed scheme is kept with units 0 and value 0, so a later snapshot shows the
 folio at zero. A wrong password raises `ValueError` naming only the file. casparser opens the encrypted PDF itself,
 so the password goes to `parse()` rather than through `decrypt`.
 

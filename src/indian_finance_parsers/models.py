@@ -40,6 +40,7 @@ class Holding:
     price: Decimal
     value: Decimal
     matures: date | None = None  # deposits and bonds: the maturity date the document states
+    nominee: str = ""    # "; "-joined names as printed; "NA" = document says none; "" = document doesn't say
 
 
 @dataclass
