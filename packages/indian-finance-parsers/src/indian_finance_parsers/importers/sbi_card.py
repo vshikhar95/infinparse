@@ -48,7 +48,7 @@ def rows_from_words(words):
         if amount == 0:
             continue  # memo rows (notes printed without an amount) carry no money
         if kind not in ("Debit", "Credit"):
-            raise ValueError(f"unexpected type {kind!r} on {a['text']}")
+            raise ValueError(f"unexpected type {kind!r} (expected Debit or Credit)")
         desc = " ".join(w["text"] for w in sorted(r["desc"], key=lambda w: (round(w["top"]), w["x0"])))
         txns.append(Txn(date=datetime.strptime(a["text"], "%d/%m/%Y").date(),
                         amount=-amount if kind == "Debit" else amount, description=desc))

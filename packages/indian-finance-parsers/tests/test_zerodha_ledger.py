@@ -29,7 +29,7 @@ def test_ledger_closing_mismatch_raises_naming_only_the_file(tmp_path):
     (tmp_path / "secret_dir").mkdir()
     p = tmp_path / "secret_dir" / "ledger.csv"
     p.write_text(LEDGER.replace("Closing Balance,,,,,,1210.00", "Closing Balance,,,,,,1211.00"))
-    with pytest.raises(ValueError, match="^ledger.csv: closing") as e:
+    with pytest.raises(ValueError, match="^ledger.csv: Closing Balance") as e:
         zerodha_ledger.parse(p)
     assert "secret_dir" not in str(e.value)
 
@@ -43,7 +43,7 @@ def test_ledger_without_closing_row(tmp_path):
 def test_ledger_rows_must_chain_from_the_opening_balance(tmp_path):
     p = tmp_path / "ledger.csv"
     p.write_text(LEDGER.replace("Opening Balance,,,,,,1000.00", "Opening Balance,,,,,,900.00"))
-    with pytest.raises(ValueError, match="opening"):
+    with pytest.raises(ValueError, match="Opening Balance"):
         zerodha_ledger.parse(p)
 
 

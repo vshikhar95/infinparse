@@ -23,10 +23,10 @@ def parse(path) -> list[Txn]:
     opening = _dec(rows[0]["net_balance"]) if rows and rows[0]["particulars"] == "Opening Balance" else None
     start = check_balance_chain(txns)  # raises if the rows don't chain among themselves
     if txns and opening is not None and start != opening:
-        raise ValueError(f"{name}: rows don't chain from the opening balance {opening}")
+        raise ValueError(f"{name}: rows don't chain from the Opening Balance row")
     last = txns[-1].balance_after if txns else opening
     if rows and rows[-1]["particulars"] == "Closing Balance" and _dec(rows[-1]["net_balance"]) != last:
-        raise ValueError(f"{name}: closing balance {_dec(rows[-1]['net_balance'])} != last row balance {last}")
+        raise ValueError(f"{name}: Closing Balance row doesn't match the last row's balance")
     return txns
 
 

@@ -1,4 +1,5 @@
 import io
+from pathlib import Path
 import traceback
 
 import pikepdf
@@ -102,3 +103,34 @@ def test_never_overwrites_the_original(enc_pdf):
         decrypted(enc_pdf, "right", enc_pdf.parent)
     with pikepdf.open(enc_pdf, password="right") as pdf:
         assert pdf.is_encrypted
+
+
+def test_decrypted_copy_never_overwrites_an_existing_file(enc_pdf, tmp_path):
+    out = tmp_path / "out"
+    out.mkdir()
+    (out / enc_pdf.name).write_text("someone else's file")
+    with pytest.raises(ValueError, match="already exists"):
+        decrypted(enc_pdf, "right", out)
+    assert (out / enc_pdf.name).read_text() == "someone else's file"
+
+
+def test_no_partial_plaintext_on_failure(tmp_path, monkeypatch):
+    import pikepdf
+    src = tmp_path / "in" / "statement.pdf"
+    src.parent.mkdir()
+    with pikepdf.Pdf.new() as pdf:
+        pdf.add_blank_page()
+        pdf.save(src, encryption=pikepdf.Encryption(owner="right", user="right"))
+    out = tmp_path / "out"
+    out.mkdir()
+
+    def broken_save(self, target, *a, **k):
+        if hasattr(target, "write"):
+            target.write(b"%PDF partial plaintext")
+        else:
+            Path(target).write_bytes(b"%PDF partial plaintext")
+        raise pikepdf.PdfError("disk full")
+    monkeypatch.setattr(pikepdf.Pdf, "save", broken_save)
+    with pytest.raises(ValueError):
+        decrypted(src, "right", out)
+    assert list(out.iterdir()) == []

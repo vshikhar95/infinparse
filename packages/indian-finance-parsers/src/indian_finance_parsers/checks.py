@@ -41,6 +41,6 @@ def check_balance_chain(txns):
     for i, t in enumerate(txns):
         bal += t.amount
         if t.balance_after is not None and bal != t.balance_after:
-            raise ValueError(f"balance chain breaks at row {i} ({t.date} {t.description!r}): "
-                             f"expected {bal}, statement says {t.balance_after}")
+            raise ValueError(f"balance chain breaks at row {i}: the running balance doesn't follow from the "
+                             "previous row")  # no amounts or descriptions: exceptions end up in logs
     return opening

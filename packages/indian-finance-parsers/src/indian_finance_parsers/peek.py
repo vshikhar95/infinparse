@@ -5,6 +5,7 @@ column positions are kept. Run: python -m indian_finance_parsers.peek FILE [rows
 """
 import re
 import sys
+import unicodedata
 
 import pandas as pd
 
@@ -17,8 +18,9 @@ def mask(cell) -> str:
     if pd.isna(cell):
         return ""
     s = str(cell)
-    s = re.sub(r"[A-Za-z]+", lambda m: m.group() if m.group().lower() in VOCAB else
-               re.sub(r"[A-Z]", "X", re.sub(r"[a-z]", "x", m.group())), s)
+    s = re.sub(r"[^\W\d_]+", lambda m: m.group() if m.group().lower() in VOCAB else  # any script's letters
+               "".join("X" if c.isupper() else "x" for c in m.group()), s)
+    s = "".join("x" if ord(c) > 127 and unicodedata.category(c)[0] in "LM" else c for c in s)  # e.g. Devanagari vowel signs
     return re.sub(r"\d", "9", s)
 
 
@@ -35,6 +37,6 @@ def read(path):
 if __name__ == "__main__":
     path, n = sys.argv[1], int(sys.argv[2]) if len(sys.argv) > 2 else 25
     df = read(path)
-    print(f"{path.split('/')[-1]}: {df.shape[0]} rows x {df.shape[1]} cols")
+    print(f"{mask(path.split('/')[-1])}: {df.shape[0]} rows x {df.shape[1]} cols")  # names carry card digits
     for i, row in df.head(n).iterrows():
         print(i, " | ".join(mask(c) for c in row))

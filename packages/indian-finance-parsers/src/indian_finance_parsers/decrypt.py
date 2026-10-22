@@ -15,13 +15,14 @@ def _decrypt_pdf(path, password, out):
             return path  # opens without a password: nothing to decrypt
         except pikepdf.PasswordError:
             pass
+        buf = io.BytesIO()
         with pikepdf.open(path, password=password) as pdf:
-            pdf.save(out)
+            pdf.save(buf)  # in memory first: a failed save leaves no partial plaintext on disk
     except pikepdf.PasswordError:
         raise ValueError(f"{path.name}: wrong or missing password") from None
     except pikepdf.PdfError:
         raise ValueError(f"{path.name}: not a readable PDF") from None
-    return out
+    return _write(out, buf)
 
 
 def _decrypt_office(path, password, out):
@@ -39,7 +40,17 @@ def _decrypt_office(path, password, out):
         raise ValueError(f"{path.name}: wrong or missing password") from None
     except (FileFormatError, ParseError):
         raise ValueError(f"{path.name}: not a readable Excel file") from None
-    out.write_bytes(buf.getvalue())  # written only after a successful decrypt: no partial file on a bad password
+    return _write(out, buf)
+
+
+def _write(out, buf):
+    """Write the decrypted copy, refusing to replace an existing file (two statements with one name, or a
+    file the caller didn't expect us to touch)."""
+    try:
+        with open(out, "xb") as f:
+            f.write(buf.getvalue())
+    except FileExistsError:
+        raise ValueError(f"{out.name}: already exists in tmpdir; use an empty folder per file") from None
     return out
 
 

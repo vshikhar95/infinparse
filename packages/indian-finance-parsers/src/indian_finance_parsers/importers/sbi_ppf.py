@@ -40,9 +40,9 @@ def parse(path) -> list[Txn]:
         raise ValueError(f"{Path(path).name}: no PPF transaction rows found")
     raw = sorted(reversed(raw), key=lambda t: t[0])  # oldest first, keeping same-day page order
     signed = [raw[0]]
-    for (_, _, _, prev), (d, desc, amount, bal) in zip(raw, raw[1:]):
+    for row, ((_, _, _, prev), (d, desc, amount, bal)) in enumerate(zip(raw, raw[1:]), start=2):
         if abs(bal - prev) != amount:
-            raise ValueError(f"{Path(path).name}: PPF balance doesn't chain on {d}: change {bal - prev}, amount {amount}")
+            raise ValueError(f"{Path(path).name}: PPF balance doesn't chain at row {row} (oldest first)")
         signed.append((d, desc, amount if bal >= prev else -amount, bal))
     return [Txn(date=d, amount=a, description=desc, balance_after=b,
                 notes="PPF interest" if a > 0 and (d.month, d.day) == (3, 31) else "")
