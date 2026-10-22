@@ -52,7 +52,7 @@ done < <(git log --all --numstat --format= | awk -F'\t' '$1 == "-" { print $3 }'
       if (addr !~ /noreply/) { kind = "email"; break }  # noreply addresses are fine, each judged on its own
     }
     if (kind != "") ;  # already a hit
-    else if (text ~ /\/(Users|home)\//) kind = "home path"
+    else if (text ~ /(^|[^A-Za-z0-9._-])\/(Users|home)\//) kind = "home path"  # not the /home/ in a URL
     else if (low ~ /(^|[^a-z0-9])(mom|mum|dad|mother|father|wife|husband|sister|brother|inherited)([^a-z0-9]|$)/) kind = "relationship word"
     else {
       s = text

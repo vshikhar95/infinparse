@@ -12,8 +12,9 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ matrix.python }}
-      - run: uv sync --locked --all-extras --dev
-      - run: uv run pytest -q -W error
+      - run: uv sync                   # the workspace dev group installs both packages with every extra
+      - run: uv run pytest -q -W error  # includes the exporter tests, which run the browser scripts' logic in node
+      - run: uv build --all-packages    # each package must build on its own
 
   pii:
     runs-on: ubuntu-latest

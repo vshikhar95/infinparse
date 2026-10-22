@@ -53,6 +53,13 @@ def test_email_never_committed_passes(repo):
     assert check(repo).returncode == 0
 
 
+def test_url_paths_are_not_home_paths(repo):
+    commit(repo, "a.js", "// @match https://www.example.com/home/purchases*\n")
+    assert check(repo).returncode == 0
+    commit(repo, "a.py", "p = '/home/someone/stmt.pdf'\n")
+    assert check(repo).returncode == 1
+
+
 def test_home_path_and_long_digits_fail(repo):
     commit(repo, "a.py", "p = '/Users/x/stmt.pdf'\n")
     assert check(repo).returncode == 1
