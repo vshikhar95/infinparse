@@ -6,7 +6,8 @@ from collections import Counter
 from datetime import datetime
 from decimal import Decimal
 
-from purchase_history_parsers._html import TAG, drop
+from bs4 import BeautifulSoup
+
 from purchase_history_parsers.models import Purchase
 
 DATE = re.compile(r"^(\d{1,2}) (\w{3})\w* (\d{4})$")  # "1 Oct 2026", "19 Sept 2026"
@@ -14,9 +15,10 @@ STATUSES = {"Refunded", "Cancelled", "Canceled", "Pending", "Declined"}  # sit b
 
 
 def parse(path):
-    html = Path(path).read_text(encoding="utf-8", errors="replace")
-    body = drop(drop(html[html.find("<body"):], "script"), "style")
-    lines = [l.strip() for l in TAG.sub("\n", body).splitlines() if l.strip()]
+    soup = BeautifulSoup(Path(path).read_text(encoding="utf-8", errors="replace"), "html.parser")
+    for tag in soup(["script", "style"]):
+        tag.decompose()
+    lines = [l.strip() for l in (soup.body or soup).get_text("\n").splitlines() if l.strip()]
     lines = lines[lines.index("Order history"):]
     out, seen = [], Counter()
     for i in range(1, len(lines) - 1):

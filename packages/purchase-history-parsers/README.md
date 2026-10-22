@@ -26,7 +26,7 @@ runbook.
 pip install purchase-history-parsers
 ```
 
-No dependencies beyond the standard library.
+One dependency: [Beautiful Soup](https://www.crummy.com/software/BeautifulSoup/), for reading saved HTML pages.
 
 ```python
 from purchase_history_parsers import parser

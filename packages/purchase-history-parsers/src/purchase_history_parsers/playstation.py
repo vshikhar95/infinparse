@@ -1,12 +1,12 @@
 """PlayStation Store receipt email saved as HTML ("Thank You For Your Purchase", pre-order confirmations).
 One order per file. ₹0 orders (PS Plus claims) are kept but flagged, not counted as purchases."""
-import html
 import re
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 
-from purchase_history_parsers._html import TAG, drop
+from bs4 import BeautifulSoup
+
 from purchase_history_parsers.models import Purchase
 
 RS = r"Rs ([\d,]+(?:\.\d\d)?)"
@@ -18,8 +18,10 @@ def _money(s):
 
 
 def _text(raw):
-    t = TAG.sub(" ", drop(raw, "style"))
-    return re.sub(r"\s+", " ", html.unescape(t)).strip()
+    soup = BeautifulSoup(raw, "html.parser")
+    for tag in soup("style"):
+        tag.decompose()
+    return re.sub(r"\s+", " ", soup.get_text(" ")).strip()
 
 
 def parse(path):
