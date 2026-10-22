@@ -9,7 +9,7 @@ Humble Bundle bundles, store orders and Humble Choice. Parser `humble` (`purchas
 ## How the file arrives
 Humble has no export button. Run the exporter [`exporters/humble.user.js`](../../exporters/humble.user.js) on your
 Purchases page while logged in (as a userscript, or pasted into the browser console). It reads your orders from
-Humble's own order endpoints in your session and downloads `humble_orders.json`. Each order's gamekey (which unlocks
+Humble's own order endpoints in your session and downloads `humble-orders.PERSONAL.json`. Each order's gamekey (which unlocks
 its games) is replaced by a hash, so the file holds no keys.
 
 ## What to pick

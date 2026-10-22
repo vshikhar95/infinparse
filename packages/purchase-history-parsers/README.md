@@ -13,7 +13,7 @@ list of `Purchase` dataclasses. No parser logs in or makes network calls. For st
 |---|---|---|---|---|
 | Steam | purchase-history page, saved as HTML | [exporter](exporters/steam.user.js) | `steam` | [docs/sources/steam.md](docs/sources/steam.md) |
 | Google Play | order-history page, saved as HTML | [exporter](exporters/google_play.user.js) | `google_play` | [docs/sources/google_play.md](docs/sources/google_play.md) |
-| Humble Bundle | `humble_orders.json` | [exporter](exporters/humble.user.js) | `humble` | [docs/sources/humble.md](docs/sources/humble.md) |
+| Humble Bundle | `humble-orders.PERSONAL.json` | [exporter](exporters/humble.user.js) | `humble` | [docs/sources/humble.md](docs/sources/humble.md) |
 | Amazon | `Your Orders.zip` | Amazon's data request | `amazon` | [docs/sources/amazon.md](docs/sources/amazon.md) |
 | PlayStation Store | receipt email saved as `.html` | your mail client | `playstation` | [docs/sources/playstation.md](docs/sources/playstation.md) |
 
@@ -31,7 +31,7 @@ One dependency: [Beautiful Soup](https://www.crummy.com/software/BeautifulSoup/)
 ```python
 from purchase_history_parsers import parser
 
-rows = parser("steam").parse("steam-account.html")   # list[Purchase]
+rows = parser("steam").parse("steam-purchase-history.PERSONAL.html")   # list[Purchase]
 ```
 
 `parser("mypkg.mystore")` loads your own parser by dotted path, so you don't need a fork.
@@ -42,6 +42,11 @@ The exporters are small JavaScript files that run in **your** browser, on the st
 Each loads your full history and downloads the file the matching parser reads. Install one in a userscript manager
 (Tampermonkey, Violentmonkey) to get an "Export" button on the page, or paste it into the browser's developer console
 to run it once. Your password never touches this package, and the Python parsers never go online.
+
+What an exporter saves is only what its parser reads: the history rows, with no page scripts, session data, account
+email or profile. It is still **your purchase history**, so the file name says `PERSONAL` and the page carries a
+banner. Keep it private: never attach it to an issue. To report a parsing problem, describe the layout or share
+masked structure instead.
 
 ## The model
 

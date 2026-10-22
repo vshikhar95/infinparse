@@ -9,7 +9,8 @@ Google Play purchases (apps, games, subscriptions). Parser `google_play` (`purch
 ## How the file arrives
 Run the exporter [`exporters/google_play.user.js`](../../exporters/google_play.user.js) on the order-history page while
 logged in (as a userscript, or pasted into the browser console). It loads the whole history, then saves the page as
-`Order history - Google Play.html`. Saving the page by hand after scrolling to the end works too.
+`google-play-order-history.PERSONAL.html`, keeping only the order lines (no
+account email). Saving the page by hand after scrolling to the end works too.
 
 ## What to pick
 The full order history page.

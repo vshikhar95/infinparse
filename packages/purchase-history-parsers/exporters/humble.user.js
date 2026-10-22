@@ -46,7 +46,7 @@ async function exportOrders() {
     const order = await (await fetch(`/api/v1/order/${gamekey}`, { credentials: "same-origin" })).json();
     out.push(toRecord(order, await orderId(gamekey)));
   }
-  download("humble_orders.json", JSON.stringify(out, null, 1));
+  download("humble-orders.PERSONAL.json", JSON.stringify(out, null, 1));  // personal data: keep it private
   return out.length;
 }
 

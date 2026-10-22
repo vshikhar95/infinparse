@@ -9,7 +9,7 @@ Steam store purchases, refunds and Community Market activity. Parser `steam` (`p
 ## How the file arrives
 Run the exporter [`exporters/steam.user.js`](../../exporters/steam.user.js) on the purchase-history page while logged
 in (as a Tampermonkey/Violentmonkey userscript, or pasted into the browser console). It clicks "Load more" until the
-whole history shows, then saves the page as `steam-account.html`. Saving the page by hand after loading everything
+whole history shows, then saves only the history rows as `steam-purchase-history.PERSONAL.html`. Saving the page by hand after loading everything
 works too.
 
 ## What to pick

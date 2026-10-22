@@ -49,7 +49,8 @@ done < <(git log --all --numstat --format= | awk -F'\t' '$1 == "-" { print $3 }'
     s = text
     while (match(s, /[A-Za-z0-9][A-Za-z0-9._%+-]*@[A-Za-z0-9.-]+\.[A-Za-z][A-Za-z]+/)) {
       addr = tolower(substr(s, RSTART, RLENGTH)); s = substr(s, RSTART + RLENGTH)
-      if (addr !~ /noreply/) { kind = "email"; break }  # noreply addresses are fine, each judged on its own
+      # noreply and the reserved example domains (RFC 2606) are fine; each address is judged on its own
+      if (addr !~ /noreply/ && addr !~ /@example\.(com|org|net)$/) { kind = "email"; break }
     }
     if (kind != "") ;  # already a hit
     else if (text ~ /(^|[^A-Za-z0-9._-])\/(Users|home)\//) kind = "home path"  # not the /home/ in a URL

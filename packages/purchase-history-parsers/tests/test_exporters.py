@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from purchase_history_parsers import humble
+from purchase_history_parsers import google_play, humble, steam
 
 EXPORTERS = Path(__file__).parent.parent / "exporters"
 pytestmark = pytest.mark.skipif(not shutil.which("node"), reason="needs node")
@@ -47,3 +47,44 @@ def test_humble_order_ids_are_stable_hashes():
 @pytest.mark.parametrize("script", sorted(p.name for p in EXPORTERS.glob("*.user.js")))
 def test_exporter_is_valid_javascript(script):
     subprocess.run(["node", "--check", str(EXPORTERS / script)], check=True)
+
+
+STEAM_ROW = ('<tr class="wallet_table_row " onclick="location.href=\'x?transid=111\'"><td class="wht_date">1 Oct, 2026</td>'
+             '<td class="wht_items "><div>Fake Game</div></td><td class="wht_type "><div>Purchase</div>'
+             '<div class="wth_payment">Visa **11</div></td><td class="wht_total "> ₹ 1,500 </td>'
+             '<td class="wht_wallet_change"></td></tr>')
+
+
+def test_steam_export_keeps_only_history_rows(tmp_path):
+    script = f"""const {{ buildExport }} = require({json.dumps(str(EXPORTERS / "steam.user.js"))});
+        process.stdout.write(buildExport([{json.dumps(STEAM_ROW)}]));"""
+    out = node(script)
+    assert "PERSONAL DATA" in out and "<script" not in out
+    (tmp_path / "steam.html").write_text(out)
+    [p] = steam.parse(tmp_path / "steam.html")
+    assert (p.order_id, p.items, p.amount) == ("111:purchase", "Fake Game", D("1500"))
+
+
+def test_google_play_export_keeps_only_order_lines(tmp_path):
+    page_text = "\n".join(["Account", "someone@example.com", "Order history", "Fake Game Pass", "1 Oct 2026", "₹1,299.00",
+                           "Demo App Pro", "Refunded", "19 Sept 2026", "₹99.00", "Help", "Signed in as x@example.com"])
+    script = f"""const {{ buildExport }} = require({json.dumps(str(EXPORTERS / "google_play.user.js"))});
+        process.stdout.write(buildExport({json.dumps(page_text)}));"""
+    out = node(script)
+    assert "PERSONAL DATA" in out and "@" not in out and "<script" not in out
+    (tmp_path / "play.html").write_text(out)
+    rows = google_play.parse(tmp_path / "play.html")
+    assert [(p.items, p.amount, p.refunded) for p in rows] == [("Fake Game Pass", D("1299.00"), False),
+                                                              ("Demo App Pro", D("99.00"), True)]
+
+
+@pytest.mark.parametrize("script,host", [("steam.user.js", "store.steampowered.com"),
+                                         ("google_play.user.js", "play.google.com"),
+                                         ("humble.user.js", "www.humblebundle.com")])
+def test_exporter_header_stays_least_privilege(script, host):
+    header = (EXPORTERS / script).read_text().split("// ==/UserScript==")[0]
+    grants = [l.split(None, 2)[2].strip() for l in header.splitlines() if l.startswith("// @grant")]
+    matches = [l.split(None, 2)[2].strip() for l in header.splitlines() if l.startswith("// @match")]
+    assert grants == ["none"]  # no GM_xmlhttpRequest: it could send data to another site
+    assert "@connect" not in header and "@require" not in header
+    assert matches and all(m.startswith(f"https://{host}/") for m in matches)

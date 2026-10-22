@@ -110,6 +110,13 @@ def test_binary_files_are_rejected(repo):
     assert r.returncode == 1 and "orders.zip" in r.stdout and "binary" in r.stdout
 
 
+def test_reserved_example_domains_are_not_personal(repo):
+    commit(repo, "a.py", "# someone@example.com, x@example.org\n")
+    assert check(repo).returncode == 0
+    commit(repo, "a.py", "# someone@example.com.evil.in\n")
+    assert check(repo).returncode == 1
+
+
 def test_noreply_exemption_is_per_address(repo):
     commit(repo, "a.py", "# 1+x@users.noreply.github.com\n")
     assert check(repo).returncode == 0
