@@ -100,6 +100,7 @@ def summary(path) -> CardSummary:
         return card_summary(pdf.pages[0].extract_words(), Path(getattr(path, "name", path)).name)
 
 
+NOTE = r"\(.*\)"  # "(Including Cash)" is printed between TOTAL CREDIT LIMIT and its figure
 NEW_DATE = r"\d\d? [A-Za-z]{3}, \d{4}"
 AMT = r"[C₹`]?\d[\d,]*(?:\.\d\d)?"
 LABELS = {  # label words per figure: 2025+ layout, then 2024 layout
@@ -127,7 +128,7 @@ def card_summary(words, name) -> CardSummary:
     def day(field, text, fmt):
         return read(name, field, lambda t: datetime.strptime(t, fmt).date(), need(field, text))
 
-    fig = {field: read(name, field, Decimal, re.sub(r"[^\d.]", "", need(field, below(words, label(words, *lab), AMT))))
+    fig = {field: read(name, field, Decimal, re.sub(r"[^\d.]", "", need(field, below(words, label(words, *lab), AMT, skip=NOTE))))
            for field, lab in LABELS[new].items()}
     if new:
         statement = day("statement_date", right(words, label(words, "Statement", "Date"), NEW_DATE), "%d %b, %Y")

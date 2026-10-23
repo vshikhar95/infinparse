@@ -22,9 +22,11 @@ def label(words, *texts):
     n, found = len(texts), []
     for i in range(len(words) - n + 1):
         run = words[i:i + n]
+        if i and norm(words[i - 1]["text"]) == "Available" and abs(words[i - 1]["top"] - run[0]["top"]) < 3:
+            continue  # "Credit Limit" inside "Available Credit Limit" is another label
         if [norm(w["text"]) for w in run] == list(texts) and max(w["top"] for w in run) - min(w["top"] for w in run) < 3:
             found.append({"x0": run[0]["x0"], "x1": run[-1]["x1"], "top": run[0]["top"]})
-    return min(found, key=lambda b: (b["top"], b["x0"]), default=None)  # topmost, leftmost: "Credit Limit" also sits inside "Available Credit Limit"
+    return min(found, key=lambda b: (b["top"], b["x0"]), default=None)
 
 
 def right(words, lab, pattern):
@@ -36,12 +38,14 @@ def right(words, lab, pattern):
     return text if re.fullmatch(pattern, text) else None
 
 
-def below(words, lab, pattern, *, reach=45, pad=10):
-    """Text of the nearest line under a label (centred within its width ± pad) that fully matches `pattern`,
-    skipping lines that don't (a note printed between a label and its figure). None if there is none."""
+def below(words, lab, pattern, *, reach=45, pad=10, skip=None):
+    """Text of the first line under a label (more than 3 pt lower, so same-line jitter doesn't count; words centred
+    within the label's width ± pad) if it fully matches `pattern`; None if it doesn't. It never falls through to a
+    later row's figure. `skip`: a pattern for note lines that legitimately sit between a label and its figure
+    (HDFC prints "(Including Cash)" under TOTAL CREDIT LIMIT); matching lines are passed over."""
     if lab is None:
         return None
-    near = [w for w in words if 0 < w["top"] - lab["top"] <= reach
+    near = [w for w in words if 3 < w["top"] - lab["top"] <= reach
             and lab["x0"] - pad <= (w["x0"] + w["x1"]) / 2 <= lab["x1"] + pad]
     lines = []
     for w in sorted(near, key=lambda w: (w["top"], w["x0"])):
@@ -51,5 +55,6 @@ def below(words, lab, pattern, *, reach=45, pad=10):
             lines.append((w["top"], [w]))
     for _, ws in lines:
         text = " ".join(w["text"] for w in sorted(ws, key=lambda w: w["x0"]))
-        if re.fullmatch(pattern, text):
-            return text
+        if skip and re.fullmatch(skip, text):
+            continue
+        return text if re.fullmatch(pattern, text) else None

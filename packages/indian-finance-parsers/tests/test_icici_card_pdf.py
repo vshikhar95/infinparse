@@ -178,3 +178,10 @@ def test_a_malformed_date_or_non_month_word_raises_without_the_value():
 def test_a_comma_only_limit_is_not_an_amount():
     with pytest.raises(ValueError, match="^s.pdf: credit limits not found"):
         icici.card_summary([dict(w, text="`,") if w["text"] == "`40,000" else w for w in ICICI_PAGE], "s.pdf")
+
+
+def test_a_missing_figure_doesnt_borrow_the_next_rows():
+    # the statement date's value is not a date; the payment due date's value, 30 pt lower, must not stand in for it
+    page = [dict(w, text="Xyzzy") if w["text"] == "March" and w["top"] < 200 else w for w in ICICI_PAGE]
+    with pytest.raises(ValueError, match="^s.pdf: statement_date not found"):
+        icici.card_summary(page, "s.pdf")

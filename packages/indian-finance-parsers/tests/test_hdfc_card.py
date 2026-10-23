@@ -232,3 +232,26 @@ def test_the_headers_total_dues_must_match_the_box_total():
     with pytest.raises(ValueError, match="^s.PDF: total_due doesn't match the summary box") as e:
         hdfc.card_summary(page, "s.PDF")
     assert "1,700" not in str(e.value)
+
+
+def test_same_line_words_are_not_below_a_label():
+    from indian_finance_parsers._words import below, label
+    words = _page(("LABEL", 100, 50), ("C9.00", 100, 52), ("C5.00", 100, 70))  # 2 pt of jitter, then the real figure
+    assert below(words, label(words, "LABEL"), AMT_) == "C5.00"
+    assert below(_page(("LABEL", 100, 50), ("note", 100, 60), ("C5.00", 100, 70)), label(words, "LABEL"), AMT_) is None
+
+
+def test_a_note_line_is_passed_over_only_when_asked():
+    from indian_finance_parsers._words import below, label
+    words = _page(("LABEL", 100, 50), ("(Note)", 100, 60), ("C5.00", 100, 70))
+    assert below(words, label(words, "LABEL"), AMT_) is None
+    assert below(words, label(words, "LABEL"), AMT_, skip=hdfc.NOTE) == "C5.00"
+
+
+def test_credit_limit_is_not_found_inside_available_credit_limit():
+    from indian_finance_parsers._words import label
+    words = _page(("Available", 10, 5), ("Credit", 50, 5), ("Limit", 90, 5))
+    assert label(words, "Credit", "Limit") is None and label(words, "Available", "Credit", "Limit")
+
+
+AMT_ = hdfc.AMT
