@@ -64,12 +64,14 @@ def check_totals(txns, name, *, credits=None, debits=None, tolerance=0):
 
 def check_card_summary(s, name):
     """Sanity of a card statement's header figures (a CardSummary): the minimum can't exceed the total, available
-    can't exceed the limit, the due date can't precede the statement. Errors name the file and field, never amounts."""
+    can't exceed the limit (an overpaid card's available credit is the limit plus its credit balance), the due date
+    can't precede the statement unless nothing is due (nil statements may print placeholder dates). Errors name the
+    file and field, never amounts."""
     for field, ok in (("minimum_due", s.total_due <= 0 or s.minimum_due <= s.total_due),
-                      ("available_credit", s.available_credit <= s.credit_limit),
+                      ("available_credit", s.available_credit <= s.credit_limit - min(s.total_due, 0) + 1),
                       ("available_cash", s.cash_limit is None or s.available_cash is None
                        or s.available_cash <= s.cash_limit),
-                      ("due_date", s.due_date >= s.statement_date)):
+                      ("due_date", s.total_due <= 0 or s.due_date >= s.statement_date)):
         if not ok:
             raise ValueError(f"{name}: {field} is inconsistent with the other figures the statement prints")
 

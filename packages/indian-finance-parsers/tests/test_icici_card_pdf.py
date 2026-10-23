@@ -145,3 +145,22 @@ def test_doubled_fake_bold_labels_are_read():
 def test_only_fully_doubled_words_collapse():
     from indian_finance_parsers._words import norm
     assert [norm(t) for t in ("LOOK", "SSTTAATT", "AA", "ABA")] == ["LOOK", "STAT", "A", "ABA"]
+
+
+def test_an_overpaid_card_may_have_more_available_than_its_limit():
+    # nothing owed, 1,000 CR: available = limit 2,00,000 + 1,000
+    page = [dict(w, text="`0.00") if w["text"] in ("`1,000.00", "`5,000.00", "`100.00") and w["x0"] < 420 else w
+            for w in ICICI_PAGE]
+    page = [dict(w, text="`1,000.00") if w["text"] == "`5,100.00" else w for w in page] + _page(("CR", 142, 279.0))
+    page = [dict(w, text="`2,01,000") if w["text"] == "`1,50,000" else w for w in page]
+    assert icici.card_summary(page, "s.pdf").available_credit == D(201000)
+    page = [dict(w, text="`2,02,000") if w["text"] == "`2,01,000" else w for w in page]
+    with pytest.raises(ValueError, match="^s.pdf: available_credit is inconsistent"):
+        icici.card_summary(page, "s.pdf")
+
+
+def test_a_nil_statement_may_print_a_due_date_before_the_statement_date():
+    page = [dict(w, text="`0.00") if w["text"] in ("`1,000.00", "`5,000.00", "`100.00", "`5,100.00", "`255.00") else w
+            for w in ICICI_PAGE]  # payments figure becomes 0.00 too, so previous 0 + 0 + 0 - 0 = 0
+    page = [dict(w, text="01,") if w["text"] == "25," else w for w in page]
+    assert icici.card_summary(page, "s.pdf").due_date == date(2031, 3, 1)
