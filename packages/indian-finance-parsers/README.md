@@ -26,6 +26,7 @@ flipped sign fails loudly instead of slipping through.
 | Mutual funds (CAMS/KFintech CAS) | CAS PDF | email on request | `portfolio/cas` | `cas` | [docs/sources/cas.md](https://github.com/vshikhar95/infinparse/blob/main/packages/indian-finance-parsers/docs/sources/cas.md) |
 | Sovereign Gold Bonds | RBI certificate PDF | email / download | `portfolio/sgb` | – | [docs/sources/sgb.md](https://github.com/vshikhar95/infinparse/blob/main/packages/indian-finance-parsers/docs/sources/sgb.md) |
 | Shriram Finance FD | deposit receipt PDF | email / download | `portfolio/shriram` | `decrypt` | [docs/sources/shriram.md](https://github.com/vshikhar95/infinparse/blob/main/packages/indian-finance-parsers/docs/sources/shriram.md) |
+| Bajaj Finance FD | deposit receipt PDF | email / download | `portfolio/bajaj_fd` | `decrypt` | [docs/sources/bajaj_fd.md](https://github.com/vshikhar95/infinparse/blob/main/packages/indian-finance-parsers/docs/sources/bajaj_fd.md) |
 
 The `decrypt` extra is needed only to open password-protected files; the parser itself reads the decrypted copy.
 
@@ -72,13 +73,14 @@ All in `indian_finance_parsers.models`. Amounts are `Decimal`.
 | `description` | `str` | narration as printed |
 | `balance_after` | `Decimal \| None` | running balance, where the statement prints one (banks, not cards) |
 | `notes` | `str` | extra context, for example which add-on card made a charge |
+| `ref` | `str` | the bank's own reference for the row as printed (SBI ref/cheque no, ICICI cheque number, ICICI card SerNo); `""` if the row has none |
 
 **`Holding`** (portfolio snapshot row)
 
 | Field | Type | Meaning |
 |---|---|---|
 | `as_of` | `date` | valuation date |
-| `source` | `str` | `cas`, `zerodha`, `ppf`, `sgb`, `shriram` |
+| `source` | `str` | `cas`, `zerodha`, `ppf`, `sgb`, `shriram`, `bajaj` |
 | `account` | `str` | identifier the file prints (folio, client id, bond or deposit number), or `""` |
 | `name`, `isin` | `str` | instrument |
 | `units`, `price`, `value` | `Decimal` | quantity, unit price, units × price |
@@ -88,6 +90,33 @@ All in `indian_finance_parsers.models`. Amounts are `Decimal`.
 
 Whose holding it is (yours, joint, someone else's) isn't in any of these files, so it isn't a field. Subclass `Holding` in
 your own code if you track it.
+
+**`CardSummary`** (a card statement's header figures; `hdfc_card.summary(path)`, `icici_card_pdf.summary(path)`)
+
+| Field | Type | Meaning |
+|---|---|---|
+| `statement_date`, `due_date` | `date` | as printed |
+| `period_start`, `period_end` | `date \| None` | the billing period, where the layout prints it |
+| `total_due` | `Decimal` | negative when the statement prints a credit balance |
+| `minimum_due` | `Decimal` | |
+| `previous_balance`, `payments`, `purchases` | `Decimal` | the summary box; `payments` is positive |
+| `charges` | `Decimal \| None` | finance charges, where printed (HDFC) |
+| `cash_advances` | `Decimal \| None` | where printed (ICICI) |
+| `credit_limit`, `available_credit` | `Decimal` | |
+| `cash_limit`, `available_cash` | `Decimal \| None` | where printed |
+
+**`Deposit`** (a fixed deposit's terms; `shriram.deposits(path)`, `bajaj_fd.deposits(path)`)
+
+| Field | Type | Meaning |
+|---|---|---|
+| `deposit_no` | `str` | as printed |
+| `deposited`, `matures` | `date` | |
+| `amount`, `maturity_amount` | `Decimal` | deposit amount; amount payable at maturity |
+| `rate` | `Decimal \| None` | % p.a., where printed |
+| `tenure_months`, `tenure_days` | `int \| None` | where printed (days beyond the whole months, Bajaj only) |
+| `scheme` | `str` | as printed, e.g. `Cumulative` |
+| `interest_payout` | `str` | as printed, e.g. `Payable on Maturity`; `""` if not printed |
+| `nominee` | `str` | same convention as `Holding.nominee` |
 
 **`Trade`** (Zerodha tradebook row): `trade_id`, `date`, `symbol`, `isin`, `side` (`buy`/`sell`), `quantity`,
 `price`, `exchange`.

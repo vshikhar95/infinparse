@@ -23,5 +23,11 @@ absent) and `as_of` is the "Statement as on" date. If a file has no such date, `
 to the file's modification date.
 
 ## Assumptions and quirks
+- When the preamble prints `Invested Value` and `Present Value`, the rows must match them: Σ units × Average Price
+  and Σ units × previous close, within ₹1 (Invested Value: ₹1 plus ₹0.005 per unit held, since the sheet rounds each
+  average price). A mismatch raises
+  `ValueError` naming the file and field. Older exports without those labels skip the check.
+- An unlisted holding (for example a 54EC bond) can have a blank ISIN cell and its ISIN as the Symbol; then, and only
+  then, the Symbol (`IN`, 9 letters or digits, then a digit: a real symbol like `INDIGOPAINTS` doesn't qualify) is used as `isin`.
 - The table starts in column B, under preamble rows; the header is the row containing `Symbol` and `ISIN`, and rows end at the first blank
   `Symbol`.

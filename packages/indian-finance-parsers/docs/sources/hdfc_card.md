@@ -22,6 +22,13 @@ Protected; the statement email states the convention. Decrypt with
 `list[Txn]` sorted by date; − charge, + credit. `meta()` returns `{"bin4": ...}`, the first 4 card digits from the
 filename (empty if the filename was changed), so each card can map to its own account.
 
+Optional: `summary(path) -> CardSummary`, the statement's header figures: statement and due dates, total and minimum
+due, the summary box (previous balance, payments, purchases, finance charges), credit limit, available credit and
+available cash. The 2025+ layout also gives the billing period. Neither layout prints the cash limit itself
+(`cash_limit` is `None`). Figures are read by position under their labels; a missing one, a box that doesn't add up,
+a minimum above the total, available above the limit or a due date before the statement date raises `ValueError`
+naming the file and field. `parse()` is unaffected.
+
 ## Assumptions and quirks
 - Two layouts are handled: 2024 (`dd/mm/yyyy hh:mm:ss  desc  [points]  1,234.56[Cr]`) and 2025 onwards
   (`dd/mm/yyyy| hh:mm  desc  [+] ₹ 1,234.56`, where `+` marks a credit).

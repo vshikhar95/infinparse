@@ -101,3 +101,72 @@ def test_cost_is_none_without_an_average_price(tmp_path):
             row[9].value = "Avg (renamed)"  # the "Average Price" header cell (column B is index 1)
     wb.save(p)
     assert {r.cost for r in zerodha_holdings.parse(p)} == {None}
+
+
+def _with_totals(tmp_path, invested, present):
+    from openpyxl import load_workbook
+    p = _holdings_xlsx(tmp_path)
+    wb = load_workbook(p)
+    wb.active.insert_rows(4, 2)
+    for r, row in ((4, ["Invested Value", invested]), (5, ["Present Value", present])):
+        wb.active.cell(r, 2, row[0])
+        wb.active.cell(r, 3, row[1])
+    wb.save(p)
+    return p
+
+
+def test_sheet_totals_match_the_rows(tmp_path):
+    # 13 x 100 + 4 x 200 = 2100 (a cent off is rounding); 13 x 150.5 + 4 x 210 = 2796.5
+    assert len(zerodha_holdings.parse(_with_totals(tmp_path, 2100.01, 2796.5))) == 2
+
+
+@pytest.mark.parametrize("invested,present,field", [(2200, 2796.5, "Invested Value"), (2100, 3000, "Present Value")])
+def test_sheet_totals_that_disagree_raise_naming_file_and_field(tmp_path, invested, present, field):
+    with pytest.raises(ValueError, match=f"^holdings-AB1234.xlsx: parsed {field} doesn't match") as e:
+        zerodha_holdings.parse(_with_totals(tmp_path, invested, present))
+    assert "2200" not in str(e.value) and "3000" not in str(e.value)
+
+
+def test_blank_isin_falls_back_to_a_symbol_that_is_an_isin(tmp_path):
+    from openpyxl import load_workbook
+    p = _holdings_xlsx(tmp_path)
+    wb = load_workbook(p)
+    ws = wb.active
+    ws.insert_rows(8)
+    for c, v in enumerate(["INE000Z00018", None, "UNLISTED", 1, 0, 0, 0, 0, 0, 0, 0, 0], 2):
+        ws.cell(8, c, v)
+    wb.save(p)
+    rows = zerodha_holdings.parse(p)
+    assert [(r.name, r.isin) for r in rows] == [("FAKECO", "INE000X01011"), ("TESTBANK", "INE000X01029"),
+                                                 ("INE000Z00018", "INE000Z00018")]
+    assert zerodha_holdings.parse(_set_isin(p, "FAKECO", None))[0].isin is None  # an ordinary symbol: no fallback
+
+
+def _set_isin(p, symbol, isin):
+    from openpyxl import load_workbook
+    wb = load_workbook(p)
+    for row in wb.active.iter_rows():
+        if row[1].value == symbol:
+            row[2].value = isin
+    wb.save(p)
+    return p
+
+
+def test_a_real_symbol_that_looks_like_an_isin_is_not_one(tmp_path):
+    p = _set_isin(_holdings_xlsx(tmp_path), "FAKECO", None)  # blank ISIN
+    from openpyxl import load_workbook
+    wb = load_workbook(p)
+    for row in wb.active.iter_rows():
+        if row[1].value == "FAKECO":
+            row[1].value = "INDIGOPAINTS"  # IN + 10 letters, but ISINs end in a digit
+    wb.save(p)
+    assert zerodha_holdings.parse(p)[0].isin is None
+
+
+def test_invested_value_tolerance_grows_with_the_units_held(tmp_path):
+    # 17 units held: ₹1 + 17 x 0.005 = ₹1.085 of slack
+    zerodha_holdings.parse(_with_totals(tmp_path, 2101.08, 2796.5))
+    with pytest.raises(ValueError, match="Invested Value"):
+        zerodha_holdings.parse(_with_totals(tmp_path, 2101.09, 2796.5))
+    with pytest.raises(ValueError, match="Present Value"):
+        zerodha_holdings.parse(_with_totals(tmp_path, 2100, 2797.6))

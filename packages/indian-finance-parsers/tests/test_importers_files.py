@@ -177,3 +177,21 @@ def test_sbi_bank_statement_summary_mismatch_rejects_the_file(tmp_path, figures,
     with pytest.raises(ValueError, match=field) as e:
         sbi_bank.parse(_sbi_with_summary(tmp_path, figures))
     assert "1,000" not in str(e.value) and "900" not in str(e.value)
+
+
+def test_sbi_bank_ref_is_the_stripped_ref_cell_or_empty(tmp_path):
+    p = _sbi_sheet(tmp_path, [["01/10/2026", "UPI/DR/TESTMART", "  TEST000111 ", "100.00", "", "900.00"],
+                              ["02-10-2026", "SALARY FAKECO", "", "", "1,000.50", "1,900.50"]])
+    assert [t.ref for t in sbi_bank.parse(p)] == ["TEST000111", ""]
+
+
+def test_icici_bank_ref_is_the_cheque_number_or_empty(tmp_path):
+    p = _icici_sheet(tmp_path, [[1, "01/10/2026", "01/10/2026", "000123", "CHQ PAID", "100.00", "0.00", "900.00"],
+                                [2, "02/10/2026", "02/10/2026", "", "SALARY FAKECO", "0.00", "1,000.50", "1,900.50"]])
+    t = icici_bank.parse(p)
+    assert [(x.ref, x.description) for x in t] == [("000123", "CHQ PAID"), ("", "SALARY FAKECO")]
+
+
+def test_icici_card_csv_ref_is_the_sernum():
+    fx = Path(__file__).parent / "fixtures"
+    assert {t.ref for t in icici_card.parse(fx / "icici_card_a.csv")} >= {"1001", "1000"}

@@ -18,7 +18,8 @@ None.
 
 ## What you get
 `list[Txn]` with `balance_after`: + credit (funds added, sale proceeds), − debit. The opening and closing balance rows
-are not returned. `meta()` returns `{}`.
+are not returned. `notes` carries the `voucher_type` (`Book Voucher`, `Journal Entry`, `Bank Receipts`, `Bank Payments`)
+when the column is present and non-empty. `meta()` returns `{}`.
 
 ## Assumptions and quirks
 - Columns: `particulars, posting_date, cost_center, voucher_type, debit, credit, net_balance`; dates are ISO.

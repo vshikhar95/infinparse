@@ -19,7 +19,7 @@ None; the XLS download is not encrypted.
 
 ## What you get
 `list[Txn]` oldest first, with `balance_after` on every row. `amount` is signed: + deposit, − withdrawal.
-`meta()` returns `{}`.
+`ref` is the `Cheque Number` cell (`""` when empty). `meta()` returns `{}`.
 
 ## Assumptions and quirks
 - INR and English column headers: the header row is found by its `S No.` cell, and columns by name

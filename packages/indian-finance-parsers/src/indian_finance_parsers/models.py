@@ -11,6 +11,7 @@ class Txn:
     description: str
     balance_after: Decimal | None = None  # bank statements carry it; cards don't
     notes: str = ""  # e.g. which add-on card made a charge
+    ref: str = ""  # the bank's own reference for the row, as printed (cheque/ref no, serial no); "" if the row has none
 
 
 @dataclass
@@ -38,3 +39,40 @@ class Trade:
     quantity: Decimal
     price: Decimal
     exchange: str = "NSE"
+
+
+@dataclass
+class CardSummary:
+    """A credit card statement's own header figures. Optional extras: `summary(path)` next to `parse(path)`."""
+    statement_date: date
+    due_date: date
+    total_due: Decimal       # negative when the statement prints a credit balance
+    minimum_due: Decimal
+    previous_balance: Decimal
+    payments: Decimal        # payments and credits, positive
+    purchases: Decimal
+    credit_limit: Decimal
+    available_credit: Decimal
+    period_start: date | None = None
+    period_end: date | None = None
+    charges: Decimal | None = None        # finance charges, where the layout prints them (HDFC)
+    cash_advances: Decimal | None = None  # where the layout prints them (ICICI)
+    cash_limit: Decimal | None = None     # the cash limit itself, where printed
+    available_cash: Decimal | None = None
+
+
+
+@dataclass
+class Deposit:
+    """A fixed deposit as its receipt states it. Optional extra: `deposits(path)` next to `parse(path)`."""
+    deposit_no: str
+    deposited: date
+    amount: Decimal
+    rate: Decimal | None     # % p.a., where printed
+    tenure_months: int | None
+    matures: date
+    maturity_amount: Decimal
+    scheme: str              # as printed, e.g. "Cumulative"
+    interest_payout: str     # as printed, e.g. "Payable on Maturity"; "" if not printed
+    nominee: str = ""        # same convention as Holding.nominee
+    tenure_days: int | None = None  # days beyond the whole months, where the receipt prints them ("12M 5D")

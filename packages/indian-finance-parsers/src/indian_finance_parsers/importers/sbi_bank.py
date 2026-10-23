@@ -45,6 +45,7 @@ def parse(path):
             amount=_amt(r.iloc[cols["Credit"]]) - _amt(r.iloc[cols["Debit"]]),
             description=re.sub(r"\s+", " ", r.iloc[cols["Details"]]).strip(),
             balance_after=_amt(r.iloc[cols["Balance"]]),
+            ref=r.iloc[cols["Ref No/Cheque No"]].strip() if "Ref No/Cheque No" in cols else "",
         ))
     expected = sum(1 for v in df.iloc[hdr + 1:, cols["Date"]] if _date(v))
     if len(txns) != expected:  # an early stop still passes the balance chain, so count explicitly

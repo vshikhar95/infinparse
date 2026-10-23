@@ -19,7 +19,8 @@ def parse(path) -> list[Txn]:
         rows = list(csv.DictReader(f))
     name = Path(path).name
     txns = [Txn(date.fromisoformat(r["posting_date"]), _dec(r["credit"]) - _dec(r["debit"]), r["particulars"],
-                _dec(r["net_balance"])) for r in rows if r["posting_date"]]
+                _dec(r["net_balance"]),
+                notes=(r.get("voucher_type") or "").strip()) for r in rows if r["posting_date"]]
     opening = _dec(rows[0]["net_balance"]) if rows and rows[0]["particulars"] == "Opening Balance" else None
     start = check_balance_chain(txns)  # raises if the rows don't chain among themselves
     if txns and opening is not None and start != opening:

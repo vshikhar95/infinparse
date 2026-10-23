@@ -1,4 +1,7 @@
 """Reconciliation checks over parsed statement rows."""
+import calendar
+import re
+from datetime import timedelta
 from itertools import groupby, permutations
 
 
@@ -59,3 +62,37 @@ def check_totals(txns, name, *, credits=None, debits=None, tolerance=0):
         if not any(abs(parsed - p) <= tolerance for p in options):
             raise ValueError(f"{name}: parsed {field} don't match the statement's total {field} (a row was missed "
                              "or misread)")
+
+
+def check_card_summary(s, name):
+    """Sanity of a card statement's header figures (a CardSummary): the minimum can't exceed the total, available
+    can't exceed the limit (an overpaid card's available credit is the limit plus its credit balance), the due date
+    can't precede the statement unless nothing is due (nil statements may print placeholder dates). Errors name the
+    file and field, never amounts."""
+    for field, ok in (("minimum_due", s.total_due <= 0 or s.minimum_due <= s.total_due),
+                      ("available_credit", s.available_credit <= s.credit_limit - min(s.total_due, 0) + 1),
+                      ("available_cash", s.cash_limit is None or s.available_cash is None
+                       or s.available_cash <= s.cash_limit),
+                      ("due_date", s.total_due <= 0 or s.due_date >= s.statement_date)):
+        if not ok:
+            raise ValueError(f"{name}: {field} is inconsistent with the other figures the statement prints")
+
+
+def _add_months(d, n):
+    y, m = divmod(d.month - 1 + n, 12)
+    y, m = d.year + y, m + 1
+    return d.replace(year=y, month=m, day=min(d.day, calendar.monthrange(y, m)[1]))
+
+
+def check_deposit(d, name):
+    """A fixed deposit's receipt against itself (a Deposit): it matures after it starts, the maturity date is the
+    deposit date plus the printed tenure (months, then days) within 3 days, and a cumulative scheme pays out more
+    than was put in. Errors name the file and field."""
+    lo = d.tenure_months is None or abs((d.matures - _add_months(d.deposited, d.tenure_months)
+                                         - timedelta(days=d.tenure_days or 0)).days) <= 3
+    s = d.scheme.lower()
+    cumulative = "cumulative" in s and not re.search(r"non[\s-]*cumulative", s)  # "Non-Cumulative" pays interest out
+    for field, ok in (("matures", d.matures > d.deposited), ("tenure_months", lo),
+                      ("maturity_amount", not cumulative or d.maturity_amount > d.amount)):
+        if not ok:
+            raise ValueError(f"{name}: {field} is inconsistent with the other figures the receipt prints")

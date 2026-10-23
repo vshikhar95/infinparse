@@ -35,7 +35,8 @@ def parse(path):
             if row[6].strip().upper() == "CR":
                 amt = -abs(amt)
             txns.append(Txn(date=_date(row[0].strip()), amount=-amt, description=row[2].strip(),
-                            notes=f"card {card}" if card else ""))
+                            notes=f"card {card}" if card else "",
+                            ref=row[1].strip()))  # the SerNo column
     return sorted(txns, key=lambda t: t.date)  # stable: keeps same-day order
 
 
