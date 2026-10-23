@@ -134,3 +134,14 @@ def test_a_missing_figure_raises_naming_the_field():
         icici.card_summary([w for w in ICICI_PAGE if w["text"] != "`255.00"], "s.pdf")
     with pytest.raises(ValueError, match="^s.pdf: credit limits not found"):
         icici.card_summary([w for w in ICICI_PAGE if w["text"] != "`40,000"], "s.pdf")
+
+
+def test_doubled_fake_bold_labels_are_read():
+    dbl = {"STATEMENT", "DATE", "PAYMENT", "DUE", "Total", "Amount", "due", "Minimum", "Previous"}
+    page = [dict(w, text="".join(c * 2 for c in w["text"])) if w["text"] in dbl else w for w in ICICI_PAGE]
+    assert icici.card_summary(page, "s.pdf", TEXT) == icici.card_summary(ICICI_PAGE, "s.pdf", TEXT)
+
+
+def test_only_fully_doubled_words_collapse():
+    from indian_finance_parsers._words import norm
+    assert [norm(t) for t in ("LOOK", "SSTTAATT", "AA", "ABA")] == ["LOOK", "STAT", "A", "ABA"]

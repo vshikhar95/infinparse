@@ -2,12 +2,18 @@
 import re
 
 
+def norm(t):
+    """Undo fake bold: some layouts print a label with every letter doubled ('SSTTAATTEE'); collapse a word only
+    when every pair is doubled, so a genuine word like 'LOOK' is left alone."""
+    return t[::2] if len(t) % 2 == 0 and t[::2] == t[1::2] else t
+
+
 def label(words, *texts):
     """The topmost-leftmost run of consecutive words reading `texts` on one line, as one box {x0, x1, top}; None if absent."""
     n, found = len(texts), []
     for i in range(len(words) - n + 1):
         run = words[i:i + n]
-        if [w["text"] for w in run] == list(texts) and max(w["top"] for w in run) - min(w["top"] for w in run) < 3:
+        if [norm(w["text"]) for w in run] == list(texts) and max(w["top"] for w in run) - min(w["top"] for w in run) < 3:
             found.append({"x0": run[0]["x0"], "x1": run[-1]["x1"], "top": run[0]["top"]})
     return min(found, key=lambda b: (b["top"], b["x0"]), default=None)  # topmost, leftmost: "Credit Limit" also sits inside "Available Credit Limit"
 

@@ -9,7 +9,7 @@ from decimal import Decimal
 
 import pdfplumber
 
-from indian_finance_parsers._words import below, label
+from indian_finance_parsers._words import below, label, norm
 from indian_finance_parsers.checks import check_card_summary, check_totals
 from indian_finance_parsers.models import CardSummary, Txn
 
@@ -67,7 +67,7 @@ def _figures(words):
     """STATEMENT SUMMARY row: Previous Balance, Purchases/Charges, Cash Advances, Payments/Credits ('`1,234.56'),
     read left to right under the 'Previous' label. A figure followed by a separate 'CR' word is a credit balance
     and comes back negative. None if the layout isn't there."""
-    lab = next((w for w in words if w["text"] == "Previous"), None)
+    lab = next((w for w in words if norm(w["text"]) == "Previous"), None)
     if lab is None:
         return None
     vals = sorted((w for w in words if w["text"].startswith("`") and 0 < w["top"] - lab["top"] < 30
