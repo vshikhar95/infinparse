@@ -33,5 +33,17 @@ Changes to `.github/`, `scripts/`, `.gitleaks*` and test fixtures need a maintai
 
 ## Releases (maintainers)
 
-Push a tag `<package>-v<version>` on a commit that is on `main`, for example `indian-finance-parsers-v0.2.0`. CI builds,
+Push a tag `<package>-v<version>` on a commit that is on `main`, for example `indian-finance-parsers-v0.1.1`. CI builds,
 tests and publishes that package to PyPI and writes the GitHub release. See `docs/ci-cd.md`.
+
+Versions follow [Semantic Versioning](https://semver.org), shifted one place while a package is below 1.0, so that a
+`>=0.1,<0.2` pin gets every safe update and never a breaking one:
+
+| Change | Below 1.0 | From 1.0 |
+|---|---|---|
+| Breaking (renamed or removed function, field or behaviour) | bump minor: 0.1.4 → 0.2.0 | bump major: 1.3.0 → 2.0.0 |
+| New feature, backwards compatible | bump patch: 0.1.0 → 0.1.1 | bump minor: 1.0.0 → 1.1.0 |
+| Bug fix | bump patch: 0.1.1 → 0.1.2 | bump patch: 1.1.0 → 1.1.1 |
+
+Each package is versioned on its own. 1.0 comes once the interface has settled (a release cycle without breaking
+changes after the first real consumer has switched over).
