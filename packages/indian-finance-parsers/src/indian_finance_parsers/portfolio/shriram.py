@@ -42,7 +42,7 @@ def deposit_from_text(text, name="receipt") -> Deposit:
     """The receipt's terms as printed. Raises ValueError (naming `name` and the field) if they contradict each other."""
     no, row, amount, rate, nominee = _fields(text)
     scheme = re.search(r"Deposit No\. \S+ Scheme (.+)", text)
-    payout = re.search(r"^Interest \w+ ?: (.+)$", text, re.M)
+    payout = re.search(r"Interest \w+ ?: (.+)$", text, re.M)
     try:
         pct = Decimal(rate[1]) if rate else None
     except ArithmeticError:

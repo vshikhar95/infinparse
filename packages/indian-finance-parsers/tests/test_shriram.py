@@ -104,3 +104,7 @@ def test_deposits_reads_a_pdf_and_names_the_file_on_failure(tmp_path):
         shriram.deposits(_pdf(tmp_path, FULL.replace("01-01-2029", "01-01-2025")))
     with pytest.raises(ValueError, match="^receipt.pdf: not a Shriram FD receipt"):
         shriram.deposits(_pdf(tmp_path, "some other pdf"))
+
+
+def test_payout_mid_line_is_read():
+    assert shriram.deposit_from_text(FULL.replace("Interest Payment :", "Branch:XX Interest Payment :")).interest_payout == "Payable on Maturity"
