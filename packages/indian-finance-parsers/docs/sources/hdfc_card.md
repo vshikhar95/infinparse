@@ -31,5 +31,10 @@ filename (empty if the filename was changed), so each card can map to its own ac
 - A leading `EMI ` before the merchant marks a charge that is merely *eligible* for EMI conversion (the statement's
   legend says so). It's still an ordinary charge, so the marker is removed from `description` and `notes` says
   `"EMI eligible"`.
-- The rows are reconciled against amounts printed in the statement, and finance charges are allowed for.
-  A mismatch raises `ValueError`.
+- In the 2024 layout, payments and refunds print no time column and end in `Cr`
+  (`dd/mm/yyyy TELE TRANSFER CREDIT (Ref# …) 1,234.00Cr`); they are kept as credits. An untimed line without `Cr`
+  (the header's due date, total and minimum due) is not a transaction.
+- The rows must match the statement's summary box, read by position in both layouts: parsed credits equal
+  Payment/Credits, and parsed debits equal Purchase/Debits (plus Finance Charges when those are printed as rows). The
+  box itself must add up (opening − credits + debits + charges = total due, within ₹1, since HDFC rounds the total).
+  A mismatch, or a statement without a readable box, raises `ValueError` naming the file and field, never amounts.

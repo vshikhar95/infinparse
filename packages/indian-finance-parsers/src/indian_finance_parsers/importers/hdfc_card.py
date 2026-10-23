@@ -1,8 +1,10 @@
 """HDFC credit card statement PDF (the monthly emailed statement; password-protected).
 
-Two layouts: 2024 ("dd/mm/yyyy hh:mm:ss  desc  [NeuCoins]  1,234.56[Cr]") and 2025+ ("dd/mm/yyyy| hh:mm  desc
-[+] ₹ 1,234.56", '+' = credit). Rows are rebuilt from word positions; the NeuCoins column is dropped by position.
-Statement totals are checked against the rows (see check_totals)."""
+Two layouts: 2024 ("dd/mm/yyyy hh:mm:ss  desc  [NeuCoins]  1,234.56[Cr]"; payments and refunds print no time:
+"dd/mm/yyyy  desc  1,234.56Cr") and 2025+ ("dd/mm/yyyy| hh:mm  desc  [+] ₹ 1,234.56", '+' = credit). Rows are
+rebuilt from word positions; the NeuCoins column is dropped by position. The rows must match the statement's summary
+box (payments/credits and purchases/debits), so a dropped row rejects the file (see check_summary)."""
+from pathlib import Path
 import re
 from datetime import datetime
 from decimal import Decimal
@@ -14,6 +16,7 @@ from indian_finance_parsers.models import Txn
 DATE = re.compile(r"(\d\d/\d\d/\d{4})\|?$")
 TIME = re.compile(r"\d\d:\d\d(:\d\d)?$")
 AMOUNT = re.compile(r"[\d,]+\.\d\d(Cr)?$")
+BOX_AMOUNT = re.compile(r"[C₹`]?([\d,]+\.\d\d)$")  # the 2025+ layout prints the ₹ sign as a "C" glyph
 
 
 def _rows(page):
@@ -29,7 +32,11 @@ def parse(path):
         for page in pdf.pages:
             coins_x = next((w["x0"] for w in page.extract_words() if w["text"].startswith("NeuCoins*")), None)
             txns += rows_from_words(_rows(page), coins_x)
-        check_totals("\n".join(p.extract_text() or "" for p in pdf.pages), txns)
+        summary = summary_from_words(pdf.pages[0].extract_words())
+    name = Path(getattr(path, "name", path)).name
+    if summary is None:
+        raise ValueError(f"{name}: statement summary box not found, so the rows can't be checked")
+    check_summary(summary, txns, name)
     return sorted(txns, key=lambda t: t.date)
 
 
@@ -38,14 +45,17 @@ def rows_from_words(rows, coins_x):
     txns = []
     for n, r in enumerate(rows):
         m = DATE.match(r[0]["text"])
-        if not m or len(r) < 3 or not TIME.match(r[1]["text"]):
+        timed = len(r) > 1 and bool(TIME.match(r[1]["text"]))  # payments in the 2024 layout print no time
+        if not m or len(r) < (3 if timed else 2):
             continue
         amt_i = max((i for i, w in enumerate(r) if AMOUNT.match(w["text"])), default=None)
         if amt_i is None:
             continue
         raw = r[amt_i]["text"]
+        if not timed and not raw.endswith("Cr"):
+            continue  # untimed rows are payments/refunds; an untimed debit is the header's due-date line
         amount = Decimal(raw.removesuffix("Cr").replace(",", ""))
-        body = r[2:amt_i]
+        body = r[2 if timed else 1:amt_i]
         # a credit's '+' sits right before the ₹ glyph; a '+' in the NeuCoins column is points earned
         credit = raw.endswith("Cr") or any(body[i]["text"] == "+" and body[i + 1]["text"] in ("C", "₹")
                                            for i in range(len(body) - 1))
@@ -64,16 +74,32 @@ def rows_from_words(rows, coins_x):
     return txns
 
 
-def check_totals(text, txns):
-    """Previous dues + rows = total due: some pair of amounts printed in the statement must differ by exactly the
-    net of the parsed rows. Catches dropped rows and flipped signs (e.g. a NeuCoins '+' read as a credit).
-    ponytail: matches against any printed pair rather than locating the labelled boxes, which move between layouts."""
-    printed = {Decimal(x.replace(",", "")) for x in re.findall(r"[\d,]+\.\d\d", text)}
-    diffs = {b - a for a in printed for b in printed} | printed
-    net = -sum(t.amount for t in txns)
-    finance = -sum(t.amount for t in txns if t.description.startswith("FINANCE CHARGES"))  # summed outside the totals
-    if net not in diffs and net - finance not in diffs:
-        raise ValueError("rows don't reconcile with the statement totals (missing row or wrong sign?)")
+def summary_from_words(words):
+    """The summary box's five figures, left to right: opening (previous) balance, payments/credits,
+    purchases/debits, finance charges, total due. Read by position below the box's first label in either layout;
+    None unless the figures add up (opening - credits + debits + charges = total, within ₹1)."""
+    anchor = next((w for w in words if w["text"] in ("Opening", "PREVIOUS")), None)
+    if anchor is None:
+        return None
+    figures = sorted((w for w in words if anchor["top"] < w["top"] <= anchor["top"] + 35 and BOX_AMOUNT.match(w["text"])),
+                     key=lambda w: w["x0"])
+    if len(figures) != 5:
+        return None
+    opening, credits, debits, charges, total = (Decimal(BOX_AMOUNT.match(w["text"])[1].replace(",", "")) for w in figures)
+    if abs(opening - credits + debits + charges - total) > 1:  # HDFC rounds the printed total (off by up to ₹1)
+        return None
+    return {"opening": opening, "credits": credits, "debits": debits, "charges": charges, "total": total}
+
+
+def check_summary(summary, txns, name):
+    """Parsed credits must equal the box's Payment/Credits, and parsed debits its Purchase/Debits (plus Finance
+    Charges when those are printed as rows). Errors name the file and field, never amounts."""
+    credits = sum(t.amount for t in txns if t.amount > 0)
+    debits = -sum(t.amount for t in txns if t.amount < 0)
+    if credits != summary["credits"]:
+        raise ValueError(f"{name}: parsed credits don't match the statement's Payment/Credits (a row was missed)")
+    if debits not in (summary["debits"], summary["debits"] + summary["charges"]):
+        raise ValueError(f"{name}: parsed debits don't match the statement's Purchase/Debits (a row was missed)")
 
 
 def meta(path):
