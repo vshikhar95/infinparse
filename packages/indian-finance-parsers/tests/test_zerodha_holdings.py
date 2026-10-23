@@ -101,3 +101,27 @@ def test_cost_is_none_without_an_average_price(tmp_path):
             row[9].value = "Avg (renamed)"  # the "Average Price" header cell (column B is index 1)
     wb.save(p)
     assert {r.cost for r in zerodha_holdings.parse(p)} == {None}
+
+
+def _with_totals(tmp_path, invested, present):
+    from openpyxl import load_workbook
+    p = _holdings_xlsx(tmp_path)
+    wb = load_workbook(p)
+    wb.active.insert_rows(4, 2)
+    for r, row in ((4, ["Invested Value", invested]), (5, ["Present Value", present])):
+        wb.active.cell(r, 2, row[0])
+        wb.active.cell(r, 3, row[1])
+    wb.save(p)
+    return p
+
+
+def test_sheet_totals_match_the_rows(tmp_path):
+    # 13 x 100 + 4 x 200 = 2100 (a cent off is rounding); 13 x 150.5 + 4 x 210 = 2796.5
+    assert len(zerodha_holdings.parse(_with_totals(tmp_path, 2100.01, 2796.5))) == 2
+
+
+@pytest.mark.parametrize("invested,present,field", [(2200, 2796.5, "Invested Value"), (2100, 3000, "Present Value")])
+def test_sheet_totals_that_disagree_raise_naming_file_and_field(tmp_path, invested, present, field):
+    with pytest.raises(ValueError, match=f"^holdings-AB1234.xlsx: parsed {field} doesn't match") as e:
+        zerodha_holdings.parse(_with_totals(tmp_path, invested, present))
+    assert "2200" not in str(e.value) and "3000" not in str(e.value)

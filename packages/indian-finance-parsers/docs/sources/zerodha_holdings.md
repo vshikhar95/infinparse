@@ -23,5 +23,8 @@ absent) and `as_of` is the "Statement as on" date. If a file has no such date, `
 to the file's modification date.
 
 ## Assumptions and quirks
+- When the preamble prints `Invested Value` and `Present Value`, the rows must match them: Σ units × Average Price
+  and Σ units × previous close, within ₹1 (real sheets are a few paise off from rounding). A mismatch raises
+  `ValueError` naming the file and field. Older exports without those labels skip the check.
 - The table starts in column B, under preamble rows; the header is the row containing `Symbol` and `ISIN`, and rows end at the first blank
   `Symbol`.
