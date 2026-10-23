@@ -11,6 +11,7 @@ class Txn:
     description: str
     balance_after: Decimal | None = None  # bank statements carry it; cards don't
     notes: str = ""  # e.g. which add-on card made a charge
+    ref: str = ""  # the bank's own reference for the row, as printed (cheque/ref no, serial no); "" if the row has none
 
 
 @dataclass

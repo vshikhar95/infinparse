@@ -73,6 +73,7 @@ All in `indian_finance_parsers.models`. Amounts are `Decimal`.
 | `description` | `str` | narration as printed |
 | `balance_after` | `Decimal \| None` | running balance, where the statement prints one (banks, not cards) |
 | `notes` | `str` | extra context, for example which add-on card made a charge |
+| `ref` | `str` | the bank's own reference for the row as printed (SBI ref/cheque no, ICICI cheque number, ICICI card SerNo); `""` if the row has none |
 
 **`Holding`** (portfolio snapshot row)
 

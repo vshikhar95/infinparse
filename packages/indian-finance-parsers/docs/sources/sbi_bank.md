@@ -19,7 +19,9 @@ The Excel file is password-protected; the download screen states the convention.
 `indian_finance_parsers.decrypt.decrypted(path, password)` (in memory; nothing is written to disk).
 
 ## What you get
-`list[Txn]` oldest first, with `balance_after` on every row; + credit, − debit. `meta()` returns `{}`.
+`list[Txn]` oldest first, with `balance_after` on every row; + credit, − debit. `ref` is the `Ref No/Cheque No` cell,
+stripped (`""` when empty; it is filled on some rows only and mostly not repeated in the details). `meta()` returns
+`{}`.
 
 ## Assumptions and quirks
 - The header row is found by its `Date` and `Balance` cells, with columns `Date | Details | Ref No/Cheque No |

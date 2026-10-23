@@ -185,3 +185,9 @@ def test_a_missing_figure_doesnt_borrow_the_next_rows():
     page = [dict(w, text="Xyzzy") if w["text"] == "March" and w["top"] < 200 else w for w in ICICI_PAGE]
     with pytest.raises(ValueError, match="^s.pdf: statement_date not found"):
         icici.card_summary(page, "s.pdf")
+
+
+def test_ref_is_the_sernum(rows):
+    assert all(len(t.ref) >= 8 and t.ref.isdigit() for t in rows) and rows
+    t = icici.rows_from_lines(["03/10/2026 12345678901 TESTMART CITY 10 1,250.50"])[0]
+    assert (t.ref, t.description) == ("12345678901", "TESTMART CITY")

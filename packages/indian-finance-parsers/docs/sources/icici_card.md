@@ -18,7 +18,7 @@ None; the CSV is not encrypted.
 
 ## What you get
 `list[Txn]` sorted by date. `amount` is signed for the card account: − charge, + payment or refund. Each row's
-`notes` names the (masked) card in the section it came from, so add-on card spend is visible. `meta()` returns
+`notes` names the (masked) card in the section it came from, so add-on card spend is visible; `ref` is the row's `SerNo`. `meta()` returns
 `{"acct4": ...}`, the last 4 digits of the `Accountno:` line, an account number ICICI prints for the card.
 
 ## Assumptions and quirks

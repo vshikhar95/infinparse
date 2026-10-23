@@ -41,7 +41,7 @@ def rows_from_lines(lines):
             continue
         amount = Decimal(m[4].replace(",", ""))
         txns.append(Txn(date=datetime.strptime(m[1], "%d/%m/%Y").date(),
-                        amount=amount if m[5] else -amount, description=m[3].strip(), notes=card))
+                        amount=amount if m[5] else -amount, description=m[3].strip(), notes=card, ref=m[2]))
     return txns
 
 

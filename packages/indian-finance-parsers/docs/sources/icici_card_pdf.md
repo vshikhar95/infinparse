@@ -21,7 +21,7 @@ Protected; the statement email and ICICI's credit-card statement help page state
 
 ## What you get
 `list[Txn]` sorted by date; − charge, + credit (rows ending `CR`). `notes` names the add-on card for rows under an
-add-on section. `meta()` returns `{"product": ...}` from the filename, so each card product can map to its own account.
+add-on section; `ref` is the row's `SerNo` (8 or more digits). `meta()` returns `{"product": ...}` from the filename, so each card product can map to its own account.
 
 Optional: `summary(path) -> CardSummary`, the statement's header figures: statement and due dates ("Month dd, yyyy"),
 total and minimum due, the summary row (previous balance, purchases, cash advances, payments), the four limits
