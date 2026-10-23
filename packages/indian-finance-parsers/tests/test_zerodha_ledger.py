@@ -53,3 +53,15 @@ def test_ledger_broken_balance_chain_raises(tmp_path):
                                 "Buy FAKECO,2026-04-03,--,Book Voucher,300.25,,1100.00"))
     with pytest.raises(ValueError, match="balance chain"):
         zerodha_ledger.parse(p)
+
+
+def test_voucher_type_goes_to_notes_when_present(tmp_path):
+    p = tmp_path / "ledger.csv"
+    p.write_text(LEDGER.replace("Refund,2026-04-04,--,Bank Receipts", "Refund,2026-04-04,--,"))
+    assert [t.notes for t in zerodha_ledger.parse(p)] == ["Bank Receipts", "Book Voucher", ""]
+
+
+def test_notes_are_empty_without_a_voucher_type_column(tmp_path):
+    p = tmp_path / "ledger.csv"
+    p.write_text("particulars,posting_date,debit,credit,net_balance\nOpening Balance,,,,10\nA,2026-04-02,,5,15\n")
+    assert [t.notes for t in zerodha_ledger.parse(p)] == [""]
