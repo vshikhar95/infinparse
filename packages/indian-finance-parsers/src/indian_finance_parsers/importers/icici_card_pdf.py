@@ -9,8 +9,9 @@ from decimal import Decimal
 
 import pdfplumber
 
-from indian_finance_parsers.checks import check_totals
-from indian_finance_parsers.models import Txn
+from indian_finance_parsers._words import below, label
+from indian_finance_parsers.checks import check_card_summary, check_totals
+from indian_finance_parsers.models import CardSummary, Txn
 
 # date, ref, description, [reward points], [foreign amount [currency]], INR amount, [CR]
 ROW = re.compile(r"^(\d\d/\d\d/\d{4}) (\d{8,}) (.*?)(?: -?\d+)?(?: [\d,]*\.\d+(?: [A-Z]{3})?)? ([\d,]+\.\d\d)( CR)?$")
@@ -57,17 +58,87 @@ def _table_text(page):
 
 
 def _summary(page):
+    """The four STATEMENT SUMMARY figures as positive numbers (what the rows are checked against), or None."""
+    vals = _figures(page.extract_words())
+    return vals and [abs(v) for v in vals]
+
+
+def _figures(words):
     """STATEMENT SUMMARY row: Previous Balance, Purchases/Charges, Cash Advances, Payments/Credits ('`1,234.56'),
-    read left to right under the 'Previous' label. None if the layout isn't there."""
-    words = page.extract_words()
-    label = next((w for w in words if w["text"] == "Previous"), None)
-    if label is None:
+    read left to right under the 'Previous' label. A figure followed by a separate 'CR' word is a credit balance
+    and comes back negative. None if the layout isn't there."""
+    lab = next((w for w in words if w["text"] == "Previous"), None)
+    if lab is None:
         return None
-    vals = sorted((w for w in words if w["text"].startswith("`") and 0 < w["top"] - label["top"] < 30
-                   and w["x0"] > label["x0"] - 30), key=lambda w: w["x0"])
+    vals = sorted((w for w in words if w["text"].startswith("`") and 0 < w["top"] - lab["top"] < 30
+                   and w["x0"] > lab["x0"] - 30), key=lambda w: w["x0"])
     if len(vals) != 4:
         return None
-    return [Decimal(w["text"].lstrip("`").replace(",", "")) for w in vals]
+    return [(-1 if any(c["text"] == "CR" and abs(c["top"] - w["top"]) < 3 and 0 <= c["x0"] - w["x1"] < 12
+                       for c in words) else 1) * Decimal(w["text"].lstrip("`").replace(",", "")) for w in vals]
+
+
+def summary(path) -> CardSummary:
+    """The statement's header figures: dates, total and minimum due, the summary row, and the limits. Optional extra
+    next to parse(); raises ValueError (file + field) if a figure is missing, the summary row doesn't add up to the
+    total due, or the figures are inconsistent."""
+    with pdfplumber.open(path) as pdf:
+        text = "\n".join(p.extract_text() or "" for p in pdf.pages)
+        return card_summary(pdf.pages[0].extract_words(), Path(getattr(path, "name", path)).name, text)
+
+
+DAY = r"[A-Za-z]+ \d\d?, \d{4}"
+PERIOD = re.compile(rf"Statement period\s*:\s*({DAY}) to ({DAY})")
+MONEY = r"`[\d,]+\.\d\d(?: CR)?"
+
+
+def _day(t):
+    for f in ("%B %d, %Y", "%b %d, %Y"):
+        try:
+            return datetime.strptime(t, f).date()
+        except ValueError:
+            pass
+    raise ValueError("unreadable date")
+
+
+def card_summary(words, name, text="") -> CardSummary:
+    """CardSummary from page-0 words ({"text","x0","x1","top"}) and the whole statement's text (for the period, which
+    is optional). Cash advances go in `cash_advances`: ICICI prints no finance-charges figure. Previous balance and
+    total due may be credit balances ('CR'), which come back negative; the summary row must give the total due:
+    previous + purchases + cash advances - payments (within ₹1)."""
+    row = _figures(words)
+    if row is None:
+        raise ValueError(f"{name}: statement summary row not found")
+
+    def need(field, v):
+        if v is None:
+            raise ValueError(f"{name}: {field} not found")
+        return v
+
+    def money(field, *words_, pad=10):
+        t = need(field, below(words, label(words, *words_), MONEY, pad=pad))
+        return (-1 if t.endswith(" CR") else 1) * Decimal(re.sub(r"[^\d.]", "", t))
+
+    total = money("total_due", "Total", "Amount", "due", pad=30)  # a trailing CR sits just past the label's width
+    lab = label(words, "Credit", "Limit")
+    limits = sorted((w for w in words if lab and re.fullmatch(r"`[\d,]+(?:\.\d\d)?", w["text"])
+                     and 0 < w["top"] - lab["top"] <= 30 and w["x0"] > lab["x0"] - 30), key=lambda w: w["x0"])
+    if len(limits) != 4:
+        raise ValueError(f"{name}: credit limits not found")
+    limit, avail, cash_limit, avail_cash = (Decimal(w["text"][1:].replace(",", "")) for w in limits)
+    prev, purchases, cash_adv, payments = row
+    if abs(prev + purchases + cash_adv - payments - total) > 1:
+        raise ValueError(f"{name}: total_due doesn't follow from the summary row (previous + purchases + cash "
+                         "advances - payments)")
+    period = PERIOD.search(text)
+    s = CardSummary(statement_date=_day(need("statement_date", below(words, label(words, "STATEMENT", "DATE"), DAY))),
+                    due_date=_day(need("due_date", below(words, label(words, "PAYMENT", "DUE", "DATE"), DAY))),
+                    total_due=total, minimum_due=money("minimum_due", "Minimum", "Amount", "due", pad=30),
+                    previous_balance=prev, payments=payments, purchases=purchases, cash_advances=cash_adv,
+                    credit_limit=limit, available_credit=avail, cash_limit=cash_limit, available_cash=avail_cash,
+                    period_start=_day(period[1]) if period else None, period_end=_day(period[2]) if period else None)
+    check_card_summary(s, name)
+    return s
 
 
 def check_summary(summary, txns, name="statement"):
