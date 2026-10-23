@@ -26,6 +26,7 @@ flipped sign fails loudly instead of slipping through.
 | Mutual funds (CAMS/KFintech CAS) | CAS PDF | email on request | `portfolio/cas` | `cas` | [docs/sources/cas.md](https://github.com/vshikhar95/infinparse/blob/main/packages/indian-finance-parsers/docs/sources/cas.md) |
 | Sovereign Gold Bonds | RBI certificate PDF | email / download | `portfolio/sgb` | – | [docs/sources/sgb.md](https://github.com/vshikhar95/infinparse/blob/main/packages/indian-finance-parsers/docs/sources/sgb.md) |
 | Shriram Finance FD | deposit receipt PDF | email / download | `portfolio/shriram` | `decrypt` | [docs/sources/shriram.md](https://github.com/vshikhar95/infinparse/blob/main/packages/indian-finance-parsers/docs/sources/shriram.md) |
+| Bajaj Finance FD | deposit receipt PDF | email / download | `portfolio/bajaj_fd` | `decrypt` | [docs/sources/bajaj_fd.md](https://github.com/vshikhar95/infinparse/blob/main/packages/indian-finance-parsers/docs/sources/bajaj_fd.md) |
 
 The `decrypt` extra is needed only to open password-protected files; the parser itself reads the decrypted copy.
 
@@ -78,7 +79,7 @@ All in `indian_finance_parsers.models`. Amounts are `Decimal`.
 | Field | Type | Meaning |
 |---|---|---|
 | `as_of` | `date` | valuation date |
-| `source` | `str` | `cas`, `zerodha`, `ppf`, `sgb`, `shriram` |
+| `source` | `str` | `cas`, `zerodha`, `ppf`, `sgb`, `shriram`, `bajaj` |
 | `account` | `str` | identifier the file prints (folio, client id, bond or deposit number), or `""` |
 | `name`, `isin` | `str` | instrument |
 | `units`, `price`, `value` | `Decimal` | quantity, unit price, units × price |
