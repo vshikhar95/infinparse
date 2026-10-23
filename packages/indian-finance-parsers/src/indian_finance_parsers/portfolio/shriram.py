@@ -43,7 +43,10 @@ def deposit_from_text(text, name="receipt") -> Deposit:
     """The receipt's terms as printed. Raises ValueError (naming `name` and the field) if they contradict each other."""
     no, row, amount, rate, nominee = _fields(text)
     scheme = re.search(r"Deposit No\. \S+ Scheme (.+)", text)
-    payout = re.search(r"Interest \w+ ?: (.+)$", text, re.M)
+    # the receipt's label is "Interest <one 9-letter word> : <payout>" (not "Interest Rate : ..."); anchoring on the
+    # word's length means an unrelated "Interest xxx : value" line can't be taken for it, at the cost of a missed
+    # payout (""), not a wrong one, if another layout words it differently
+    payout = re.search(r"Interest (?!Rate\b)[A-Za-z]{9} ?: (.+)$", text, re.M)
     d = Deposit(deposit_no=no[1], deposited=read(name, "deposit date", _d, row[1]),
                 amount=read(name, "deposit amount", Decimal, amount[1].replace(",", "")),
                 rate=read(name, "rate", Decimal, rate[1]) if rate else None,

@@ -48,7 +48,7 @@ FULL = """Customer ID S0000001 PAN ABCDE0000F Deposit No. TST-12345678 Scheme Cu
 Date of Deposit Tenure (Months) Rate of Interest Maturity Amount (₹) Date of Maturity
 7.00 % p.a.
 01-01-2026 36 *612500.00 01-01-2029
-Interest Payment : Payable on Maturity
+Interest Frequency : Payable on Maturity
 Deposit Amount : ₹500000.00
 Nominee : TEST NOMINEE
 """
@@ -115,7 +115,7 @@ def test_deposits_reads_a_pdf_and_names_the_file_on_failure(tmp_path):
 
 
 def test_payout_mid_line_is_read():
-    assert shriram.deposit_from_text(FULL.replace("Interest Payment :", "Branch:XX Interest Payment :")).interest_payout == "Payable on Maturity"
+    assert shriram.deposit_from_text(FULL.replace("Interest Frequency :", "Branch:XX Interest Frequency :")).interest_payout == "Payable on Maturity"
 
 
 def test_unreadable_dates_raise_without_the_value():
@@ -123,3 +123,9 @@ def test_unreadable_dates_raise_without_the_value():
         with pytest.raises(ValueError) as e:
             fn(FULL.replace("01-01-2029", "99-99-2029"), "r.pdf")
         assert str(e.value) == "r.pdf: maturity date is unreadable"
+
+
+def test_other_interest_lines_are_not_the_payout():
+    t = FULL.replace("Interest Frequency : Payable on Maturity", "Interest Rate : 7.00 %\nInterest Amount : 112500.00\nInterest Component : 5")
+    assert shriram.deposit_from_text(t).interest_payout == "5"  # a 9-letter label is accepted; Rate and Amount are not
+    assert shriram.deposit_from_text(t.replace("Interest Component : 5", "")).interest_payout == ""
