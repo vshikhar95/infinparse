@@ -78,3 +78,11 @@ def test_nominee_and_payout_mid_line_are_read():
         "Interest Payment", "Branch: XX Interest Payment")
     d = bajaj_fd.deposit_from_text(t)
     assert (d.nominee, d.interest_payout) == ("TEST NOMINEE ONE; TEST NOMINEE TWO", "OnMaturity")
+
+
+def test_tenure_days_are_kept_and_checked():
+    t = RECEIPT.replace("12M 0D 01-01-2027", "12M 5D 06-01-2027")
+    d = bajaj_fd.deposit_from_text(t)
+    assert (d.tenure_months, d.tenure_days) == (12, 5)
+    with pytest.raises(ValueError, match="tenure_months is inconsistent"):
+        bajaj_fd.deposit_from_text(RECEIPT.replace("12M 0D 01-01-2027", "12M 5D 20-01-2027"))

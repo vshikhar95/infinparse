@@ -74,3 +74,4 @@ class Deposit:
     scheme: str              # as printed, e.g. "Cumulative"
     interest_payout: str     # as printed, e.g. "Payable on Maturity"; "" if not printed
     nominee: str = ""        # same convention as Holding.nominee
+    tenure_days: int | None = None  # days beyond the whole months, where the receipt prints them ("12M 5D")

@@ -25,9 +25,9 @@ the maturity amount. Whether a deposit has matured, and what it is worth today, 
 interest payout (as printed) and maturity amount.
 
 ## Assumptions and quirks
-- Dates are `dd-mm-yyyy`; amounts are INR. The deposit period prints as `<months>M <days>D`; only the months are kept.
+- Dates are `dd-mm-yyyy`; amounts are INR. The deposit period prints as `<months>M <days>D`; `tenure_months` and `tenure_days` carry both parts.
 - The deposit amount plus the interest amount must equal the maturity amount (within ₹1), the maturity must be after
-  the deposit date, and the tenure must match the two dates within a month; otherwise `ValueError` names the file and
+  the deposit date, and the maturity date must be the deposit date plus the tenure (months and days) within 3 days; otherwise `ValueError` names the file and
   field, never amounts.
 - Text without `Bajaj Finance` and the `DEPOSIT NUMBER:` header, or without the deposit row, raises `ValueError`.
 - The interest payout line (`Interest Payment <label> : <value>`) and the `Nominee n :` slots are optional.

@@ -112,7 +112,7 @@ your own code if you track it.
 | `deposited`, `matures` | `date` | |
 | `amount`, `maturity_amount` | `Decimal` | deposit amount; amount payable at maturity |
 | `rate` | `Decimal \| None` | % p.a., where printed |
-| `tenure_months` | `int \| None` | where printed |
+| `tenure_months`, `tenure_days` | `int \| None` | where printed (days beyond the whole months, Bajaj only) |
 | `scheme` | `str` | as printed, e.g. `Cumulative` |
 | `interest_payout` | `str` | as printed, e.g. `Payable on Maturity`; `""` if not printed |
 | `nominee` | `str` | same convention as `Holding.nominee` |

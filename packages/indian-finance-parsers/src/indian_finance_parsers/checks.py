@@ -1,5 +1,7 @@
 """Reconciliation checks over parsed statement rows."""
+import calendar
 import re
+from datetime import timedelta
 from itertools import groupby, permutations
 
 
@@ -76,13 +78,21 @@ def check_card_summary(s, name):
             raise ValueError(f"{name}: {field} is inconsistent with the other figures the statement prints")
 
 
+def _add_months(d, n):
+    y, m = divmod(d.month - 1 + n, 12)
+    y, m = d.year + y, m + 1
+    return d.replace(year=y, month=m, day=min(d.day, calendar.monthrange(y, m)[1]))
+
+
 def check_deposit(d, name):
-    """A fixed deposit's receipt against itself (a Deposit): it matures after it starts, the printed tenure matches
-    the dates (±1 month), and a cumulative scheme pays out more than was put in. Errors name the file and field."""
-    months = (d.matures.year - d.deposited.year) * 12 + d.matures.month - d.deposited.month
-    cumulative = re.sub(r"[^a-z]", "", d.scheme.lower()).startswith("cumulative")  # "Non-Cumulative" pays interest out
-    for field, ok in (("matures", d.matures > d.deposited),
-                      ("tenure_months", d.tenure_months is None or abs(months - d.tenure_months) <= 1),
+    """A fixed deposit's receipt against itself (a Deposit): it matures after it starts, the maturity date is the
+    deposit date plus the printed tenure (months, then days) within 3 days, and a cumulative scheme pays out more
+    than was put in. Errors name the file and field."""
+    lo = d.tenure_months is None or abs((d.matures - _add_months(d.deposited, d.tenure_months)
+                                         - timedelta(days=d.tenure_days or 0)).days) <= 3
+    s = d.scheme.lower()
+    cumulative = "cumulative" in s and not re.search(r"non[\s-]*cumulative", s)  # "Non-Cumulative" pays interest out
+    for field, ok in (("matures", d.matures > d.deposited), ("tenure_months", lo),
                       ("maturity_amount", not cumulative or d.maturity_amount > d.amount)):
         if not ok:
             raise ValueError(f"{name}: {field} is inconsistent with the other figures the receipt prints")

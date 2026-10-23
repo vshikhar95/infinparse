@@ -4,10 +4,9 @@ matured, and what it is worth today, is the caller's judgement."""
 import re
 from datetime import datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pdfplumber
-
-from pathlib import Path
 
 from indian_finance_parsers.checks import check_deposit
 from indian_finance_parsers.models import Deposit, Holding

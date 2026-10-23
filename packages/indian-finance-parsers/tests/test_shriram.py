@@ -78,8 +78,16 @@ def test_contradicting_receipt_raises_naming_file_and_field(old, new, field):
     assert "400000" not in str(e.value)
 
 
-def test_tenure_is_off_by_one_month_at_most():
-    shriram.deposit_from_text(FULL.replace(" 36 ", " 35 "))
+def test_tenure_must_match_the_dates_within_a_few_days():
+    shriram.deposit_from_text(FULL.replace("01-01-2029", "03-01-2029"))
+    with pytest.raises(ValueError, match="tenure_months is inconsistent"):
+        shriram.deposit_from_text(FULL.replace("01-01-2029", "20-01-2029"))
+
+
+def test_scheme_naming_cumulative_among_other_words_still_needs_a_bigger_maturity_amount():
+    with pytest.raises(ValueError, match="maturity_amount is inconsistent"):
+        shriram.deposit_from_text(FULL.replace("Scheme Cumulative", "Scheme Unnati Cumulative").replace("*612500.00", "*500000.00"))
+    shriram.deposit_from_text(FULL.replace("Scheme Cumulative", "Scheme Non Cumulative").replace("*612500.00", "*500000.00"))
 
 
 def test_non_cumulative_needs_no_bigger_maturity_amount():

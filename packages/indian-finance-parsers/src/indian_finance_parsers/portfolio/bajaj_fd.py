@@ -41,7 +41,8 @@ def deposit_from_text(text, name="receipt") -> Deposit:
     d = Deposit(deposit_no=no[1], deposited=_d(row[1]), amount=amount, rate=Decimal(row[6]),
                 tenure_months=int(row[3]), matures=_d(row[5]), maturity_amount=maturity, scheme=row[2],
                 interest_payout=payout[1].strip() if payout else "",
-                nominee="NA" if nominees.upper() in ("NA", "N.A.", "NIL", "-") else nominees)  # NA = receipt says none
+                nominee="NA" if nominees.upper() in ("NA", "N.A.", "NIL", "-") else nominees,  # NA = receipt says none
+                tenure_days=int(row[4]))
     check_deposit(d, name)
     return d
 
