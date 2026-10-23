@@ -30,3 +30,23 @@ def test_not_a_certificate_raises():
 
 def test_no_network_helpers():
     assert not hasattr(sgb, "fetch_rate")  # valuation needs the network; it's the caller's job
+
+
+NOMINEES = """
+Nominee Details
+Sr No Nominee ID Nominee Name
+1 TEST NOMINEE ONE
+2 TEST NOMINEE TWO
+Some footer"""
+
+
+def test_cost_is_the_consideration_amount_printed_and_value_stays_units_times_price():
+    h = sgb.holding_from_text(CERT.replace("5000", "5100", 1))  # issue price 5100: value 25,500, paid 25,000
+    assert (h.cost, h.value) == (D("25000.00"), D(25500))
+    assert sgb.holding_from_text(CERT.replace("Consideration Amount ` 25,000.00\n", "")).cost is None
+
+
+def test_nominees_are_joined_and_absent_section_reads_empty():
+    assert sgb.holding_from_text(CERT + NOMINEES).nominee == "TEST NOMINEE ONE; TEST NOMINEE TWO"
+    assert sgb.holding_from_text(CERT).nominee == ""
+    assert sgb.holding_from_text(CERT + "\nNominee Details\nSr No Nominee ID Nominee Name\n").nominee == ""

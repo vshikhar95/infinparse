@@ -21,6 +21,10 @@ Usually none. If protected, follow the issuing bank's convention and decrypt fir
 the series, with `account`/`isin` = the security code and `matures` = the maturity date. Valuing it today is your
 job: RBI redeems at the IBJA 999 gold price (<https://ibjarates.com/>).
 
+`cost` is the certificate's Consideration Amount (what was paid; `None` if not printed), while `value` stays units ×
+issue price. `nominee` is the names under "Nominee Details" (rows: serial number, then the name), `; `-joined, or `""`
+when the certificate has no such section or rows.
+
 ## Assumptions and quirks
 - Text labels such as `Security Code`, `Settlement Date`, `Number of Units`, `Issue Price` and `Maturity Date` must
   be present, or `ValueError` is raised.
