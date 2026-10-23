@@ -36,6 +36,7 @@ Changes to `.github/`, `scripts/`, `.gitleaks*` and test fixtures need a maintai
 
 Push a tag `<package>-v<version>` on a commit that is on `main`, for example `indian-finance-parsers-v0.1.1`. CI builds,
 tests and publishes that package to PyPI and writes the GitHub release. See `docs/ci-cd.md`.
+Releases go through a PR, never a direct push to `main`. History rewrites are logged in `docs/history-rewrites.md`.
 
 Versions follow [Semantic Versioning](https://semver.org), shifted one place while a package is below 1.0, so that a
 `>=0.1,<0.2` pin gets every safe update and never a breaking one:
