@@ -22,7 +22,8 @@ the series, with `account`/`isin` = the security code and `matures` = the maturi
 job: RBI redeems at the IBJA 999 gold price (<https://ibjarates.com/>).
 
 `cost` is the certificate's Consideration Amount (what was paid; `None` if not printed), while `value` stays units ×
-issue price. `nominee` is the names under "Nominee Details" (rows: serial number, then the name), `; `-joined, or `""`
+issue price. `nominee` is the names under "Nominee Details" (rows: serial number, then the name; words the column header lists after "Nominee Name", such as a relationship or
+share, are not part of it), `; `-joined, or `""`
 when the certificate has no such section or rows.
 
 ## Assumptions and quirks

@@ -14,17 +14,24 @@ def _d(s):
 
 
 def _nominees(text):
-    """Names under "Nominee Details" (rows: serial, then the name), "; "-joined; "" if the section or its rows are absent."""
+    """Names under "Nominee Details" (rows: serial, then the name), "; "-joined; "" if the section or its rows are absent.
+    The column header (the line holding "Nominee Name") is skipped; words it lists after "Nominee Name" are further
+    one-word columns (relationship, share), so as many trailing words are dropped from each row."""
     lines = text.splitlines()
     start = next((i for i, ln in enumerate(lines) if ln.strip() == "Nominee Details"), None)
     if start is None:
         return ""
+    rest, extra = lines[start + 1:], 0
+    if rest and "Nominee Name" in rest[0]:
+        extra = len(rest[0].split("Nominee Name", 1)[1].split())
+        rest = rest[1:]
     names = []
-    for ln in lines[start + 2:]:  # the line after the heading is the column header
+    for ln in rest:
         m = re.fullmatch(r"\s*\d{1,2} (\S.*?)\s*", ln)
         if not m:
             break
-        names.append(m[1])
+        words = m[1].split()
+        names.append(" ".join(words[:-extra] if extra and len(words) > extra else words))
     return "; ".join(names)
 
 

@@ -50,3 +50,12 @@ def test_nominees_are_joined_and_absent_section_reads_empty():
     assert sgb.holding_from_text(CERT + NOMINEES).nominee == "TEST NOMINEE ONE; TEST NOMINEE TWO"
     assert sgb.holding_from_text(CERT).nominee == ""
     assert sgb.holding_from_text(CERT + "\nNominee Details\nSr No Nominee ID Nominee Name\n").nominee == ""
+
+
+def test_without_a_column_header_the_first_line_is_a_row():
+    assert sgb.holding_from_text(CERT + "\nNominee Details\n1 TEST NOMINEE ONE\n").nominee == "TEST NOMINEE ONE"
+
+
+def test_columns_after_the_name_are_not_part_of_it():
+    t = CERT + "\nNominee Details\nSr No Nominee Name Relationship Share\n1 TEST NOMINEE ONE SON 100%\n2 TEST TWO DAUGHTER 0%\n"
+    assert sgb.holding_from_text(t).nominee == "TEST NOMINEE ONE; TEST TWO"
