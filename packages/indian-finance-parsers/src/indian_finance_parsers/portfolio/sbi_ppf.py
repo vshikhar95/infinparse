@@ -8,5 +8,6 @@ from indian_finance_parsers.models import Holding
 
 def parse(path) -> list[Holding]:
     last = sbi_ppf.parse(path)[-1]
+    assert last.balance_after is not None  # sbi_ppf.parse sets it on every row
     return [Holding(as_of=last.date, source="ppf", account="", name="SBI PPF", isin="SBI-PPF",
                     units=Decimal(1), price=last.balance_after, value=last.balance_after)]

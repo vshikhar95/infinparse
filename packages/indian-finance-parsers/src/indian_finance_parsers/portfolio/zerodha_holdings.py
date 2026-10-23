@@ -40,7 +40,7 @@ def parse(path, as_of: date | None = None) -> list[Holding]:
     for r in rows:
         if not r[ix["Symbol"]]:
             break
-        units = sum(_dec(r[ix[q]]) for q in QTY)
+        units = sum((_dec(r[ix[q]]) for q in QTY), Decimal(0))
         price = _dec(r[ix["Previous Closing Price"]])
         avg = _dec(r[ix["Average Price"]]) if "Average Price" in ix else Decimal(0)
         isin = r[ix["ISIN"]]

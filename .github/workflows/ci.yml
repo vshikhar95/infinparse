@@ -89,6 +89,8 @@ jobs:
           enable-cache: false
       - name: ruff
         run: uvx ruff@0.14.2 check .
+      - name: mypy
+        run: uvx mypy@2.4.0
       - name: biome (exporters)
         run: npx --yes @biomejs/biome@1.9.4 lint packages/purchase-history-parsers/exporters
       - name: shellcheck
