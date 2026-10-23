@@ -43,3 +43,10 @@ def test_sbi_card():
     with pytest.raises(ValueError, match="unexpected type") as e:
         sbi_card.rows_from_words(words)
     assert "/2026" not in str(e.value)
+
+
+def test_icici_bank_bad_date():
+    from indian_finance_parsers.importers import icici_bank
+    with pytest.raises(ValueError, match="dd/mm/yyyy") as e:
+        icici_bank._date(SECRET_AMOUNT)
+    assert SECRET_AMOUNT not in str(e.value)

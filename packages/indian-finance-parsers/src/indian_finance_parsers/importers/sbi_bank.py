@@ -32,7 +32,7 @@ def parse(path):
     df = pd.read_excel(path, header=None, dtype=str).fillna("")
     hdr = next(i for i, r in df.iterrows() if {"Date", "Balance"} <= {c.strip() for c in r})
     cols = {c.strip(): j for j, c in enumerate(df.iloc[hdr]) if c.strip()}
-    txns = []
+    txns: list[Txn] = []
     for _, r in df.iloc[hdr + 1:].iterrows():
         d = _date(r.iloc[cols["Date"]])
         if d is None:

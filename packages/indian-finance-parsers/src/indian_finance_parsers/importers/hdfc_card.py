@@ -22,7 +22,7 @@ BOX_AMOUNT = re.compile(r"[C₹`]?(\d[\d,]*\.\d\d)$")  # the 2025+ layout prints
 
 
 def _rows(page):
-    lines = {}
+    lines: dict[int, list[dict]] = {}
     for w in page.extract_words():
         lines.setdefault(round(w["top"]), []).append(w)
     return [sorted(ws, key=lambda w: w["x0"]) for _, ws in sorted(lines.items())]
@@ -83,11 +83,11 @@ def summary_from_words(words):
     anchor = next((w for w in words if w["text"] in ("Opening", "PREVIOUS")), None)
     if anchor is None:
         return None
-    figures = sorted((w for w in words if anchor["top"] < w["top"] <= anchor["top"] + 35 and BOX_AMOUNT.match(w["text"])),
-                     key=lambda w: w["x0"])
+    figures = sorted((w["x0"], m[1]) for w in words
+                     if anchor["top"] < w["top"] <= anchor["top"] + 35 and (m := BOX_AMOUNT.match(w["text"])))
     if len(figures) != 5:
         return None
-    opening, credits, debits, charges, total = (Decimal(BOX_AMOUNT.match(w["text"])[1].replace(",", "")) for w in figures)
+    opening, credits, debits, charges, total = (Decimal(a.replace(",", "")) for _, a in figures)
     if abs(opening - credits + debits + charges - total) > 1:  # HDFC rounds the printed total (off by up to ₹1)
         return None
     return {"opening": opening, "credits": credits, "debits": debits, "charges": charges, "total": total}

@@ -47,7 +47,7 @@ def below(words, lab, pattern, *, reach=45, pad=10, skip=None):
         return None
     near = [w for w in words if 3 < w["top"] - lab["top"] <= reach
             and lab["x0"] - pad <= (w["x0"] + w["x1"]) / 2 <= lab["x1"] + pad]
-    lines = []
+    lines: list[tuple[float, list[dict]]] = []
     for w in sorted(near, key=lambda w: (w["top"], w["x0"])):
         if lines and w["top"] - lines[-1][0] < 3:
             lines[-1][1].append(w)

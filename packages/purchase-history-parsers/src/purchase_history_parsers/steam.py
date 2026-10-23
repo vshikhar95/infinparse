@@ -39,7 +39,8 @@ def _order_id(transid, row, kind, seen):
 
 def parse(path):
     soup = BeautifulSoup(Path(path).read_text(encoding="utf-8", errors="replace"), "html.parser")
-    out, seen = [], Counter()
+    out: list[Purchase] = []
+    seen: Counter[str] = Counter()
     for row in soup.select("table.wallet_history_table tr.wallet_table_row"):
         transid = re.search(r"transid=(\d+)", " ".join(str(v) for v in row.attrs.values()))
         type_lines = _text(_cell(row, "wht_type"))

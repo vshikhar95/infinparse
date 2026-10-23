@@ -16,7 +16,7 @@ MAX_GAP = 40  # a wrapped fragment further than this from any row is page furnit
 
 
 def parse(path):
-    txns = []
+    txns: list[Txn] = []
     with pdfplumber.open(path) as pdf:
         for page in pdf.pages:
             txns += rows_from_words(page.extract_words())
@@ -25,7 +25,7 @@ def parse(path):
 
 def rows_from_words(words):
     """Txns from one page's words ({"text","x0","top"}); nearest dated row owns each fragment."""
-    txns = []
+    txns: list[Txn] = []
     header = next((w["top"] for w in words if w["text"] == "Description"), -1)
     anchors = [w for w in words if w["x0"] < DESC_X and DATE.match(w["text"]) and w["top"] > header]
     if not anchors:

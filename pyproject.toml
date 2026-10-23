@@ -16,6 +16,7 @@ addopts = ["--import-mode=importlib"]  # the packages' test files share names (t
 
 [tool.mypy]
 files = ["packages/indian-finance-parsers/src", "packages/purchase-history-parsers/src"]
+check_untyped_defs = true  # also check the bodies of functions without type hints
 ignore_missing_imports = true  # CI runs mypy without installing the parsers' dependencies
 
 [tool.ruff]

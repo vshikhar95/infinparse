@@ -30,7 +30,8 @@ def _amt(s):
 def parse(path):
     with zipfile.ZipFile(path) as z:
         orders, refunds = _rows(z, ORDERS), _rows(z, REFUNDS)
-    out, by_id = [], {}
+    out: list[Purchase] = []
+    by_id: dict[str, Purchase] = {}
     for r in orders:
         if r["Order Status"] == "Cancelled":
             continue
@@ -44,7 +45,7 @@ def parse(path):
             out.append(p)
         p.items = " | ".join(filter(None, [p.items, r["Product Name"]]))
         p.amount += _amt(r["Total Amount"])
-    seen = Counter()
+    seen: Counter[str] = Counter()
     for r in refunds:
         if r["Disbursement Type"] != "Refund" or r["Reversal Status"] != "Completed" or not r["Refund Amount"][:1].isdigit():
             continue

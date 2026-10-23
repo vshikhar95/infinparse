@@ -8,7 +8,10 @@ from indian_finance_parsers.models import Txn
 
 
 def _date(s):
-    d, m, y = re.fullmatch(r"(\d\d)\D(\d\d)\D(\d{4})", s.strip()).groups()
+    match = re.fullmatch(r"(\d\d)\D(\d\d)\D(\d{4})", s.strip())
+    if not match:
+        raise ValueError("ICICI date is not dd/mm/yyyy")
+    d, m, y = match.groups()
     return date(int(y), int(m), int(d))
 
 
@@ -21,7 +24,7 @@ def parse(path):
     df = pd.read_excel(path, header=None, dtype=str).fillna("")
     hdr = next(i for i, r in df.iterrows() if any(c.strip() == "S No." for c in r))
     cols = {c.strip(): j for j, c in enumerate(df.iloc[hdr])}
-    txns = []
+    txns: list[Txn] = []
     for _, r in df.iloc[hdr + 1:].iterrows():
         sno, remarks = r.iloc[cols["S No."]].strip(), r.iloc[cols["Transaction Remarks"]].strip()
         if not sno:

@@ -31,10 +31,11 @@ def parse(path):
     total = re.search(r"Total: " + RS, t)
     if not (order and when and total):
         raise ValueError("not a PlayStation purchase receipt (missing order number, date or total)")
-    start = re.search(r"Details (?:Unit of )?Price", t) or re.search(r"$", t)  # no Details heading: no items
-    end = min((i for i in (t.find("Subtotal:"), t.find("Current Wallet Amount"), t.find("Total:")) if i > start.end()),
+    heading = re.search(r"Details (?:Unit of )?Price", t)
+    start = heading.end() if heading else len(t)  # no Details heading: no items
+    end = min((i for i in (t.find("Subtotal:"), t.find("Current Wallet Amount"), t.find("Total:")) if i > start),
               default=len(t))
-    details = t[start.end():end]
+    details = t[start:end]
     details = re.sub(r"Recurring Subscription Fee: " + RS + r" will be charged on \S+", "", details)
     items = [i.strip() for i in re.split(RS, details)[::2] if i.strip()]
     cards = CARD.findall(t[total.end():])

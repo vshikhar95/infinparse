@@ -20,7 +20,8 @@ def parse(path):
         tag.decompose()
     lines = [line.strip() for line in (soup.body or soup).get_text("\n").splitlines() if line.strip()]
     lines = lines[lines.index("Order history"):]
-    out, seen = [], Counter()
+    out: list[Purchase] = []
+    seen: Counter[str] = Counter()
     for i in range(1, len(lines) - 1):
         m = DATE.match(lines[i])
         if not (m and lines[i + 1].startswith("₹")):

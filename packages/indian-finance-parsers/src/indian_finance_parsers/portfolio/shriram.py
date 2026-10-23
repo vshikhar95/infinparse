@@ -24,7 +24,8 @@ def _fields(text):
     row = re.search(D8 + r" (\d+) \*?(\d[\d,]*\.\d\d) " + D8, text)  # deposit date, months, maturity amount, maturity date
     amount = re.search(r"Deposit Amount : ₹?(\d[\d,]*\.\d\d)", text)
     rate = re.search(r"(?<![\d.])([\d.]{1,8}) % p\.a\.", text)
-    nominee = (re.search(r"Nominee : (.+)", text) or [None, ""])[1].strip()
+    named = re.search(r"Nominee : (.+)", text)
+    nominee = named[1].strip() if named else ""
     if not (no and row and amount):
         raise ValueError("not a Shriram FD receipt (missing deposit no, dates or amount)")
     return no, row, amount, rate, "NA" if nominee.upper() in ("NA", "N.A.", "NIL", "-") else nominee  # NA = receipt says none

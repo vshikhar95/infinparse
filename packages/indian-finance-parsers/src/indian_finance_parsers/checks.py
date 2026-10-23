@@ -4,6 +4,8 @@ import re
 from datetime import timedelta
 from itertools import groupby, permutations
 
+from indian_finance_parsers.models import Txn
+
 
 def _chains(rows, opening):
     bal = opening
@@ -21,9 +23,10 @@ def order_by_balance(txns):
     ponytail: tries every order of a day's rows, so days with more than 7 rows are left as printed."""
     if not txns or any(t.balance_after is None for t in txns):
         return txns
-    out, bal = [], None
-    for _, day in groupby(txns, key=lambda t: t.date):
-        day = list(day)
+    out: list[Txn] = []
+    bal = None
+    for _, group in groupby(txns, key=lambda t: t.date):
+        day = list(group)
         start = bal if bal is not None else day[0].balance_after - day[0].amount
         if not _chains(day, start) and len(day) <= 7:
             fixed = next((list(p) for p in permutations(day)
