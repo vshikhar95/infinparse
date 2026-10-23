@@ -39,5 +39,7 @@ def parse(path, as_of: date | None = None) -> list[Holding]:
             break
         units = sum(_dec(r[ix[q]]) for q in QTY)
         price = _dec(r[ix["Previous Closing Price"]])
-        out.append(Holding(as_of, "zerodha", client, r[ix["Symbol"]], r[ix["ISIN"]], units, price, units * price))
+        avg = _dec(r[ix["Average Price"]]) if "Average Price" in ix else Decimal(0)
+        out.append(Holding(as_of, "zerodha", client, r[ix["Symbol"]], r[ix["ISIN"]], units, price, units * price,
+                           cost=units * avg if avg else None))  # the sheet's average buy price x the units held
     return out

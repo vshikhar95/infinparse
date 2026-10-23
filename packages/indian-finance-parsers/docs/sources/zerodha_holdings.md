@@ -17,7 +17,8 @@ None.
 
 ## What you get
 `parse(path, as_of=None) -> list[Holding]`, one per stock. Units = available + discrepant + pledged (margin and loan)
-quantities; value = units × previous closing price. From the sheet's preamble: `account` is the Client ID ("" if
+quantities; value = units × previous closing price; cost = units × the sheet's Average Price (`None` if that
+column is missing or 0). From the sheet's preamble: `account` is the Client ID ("" if
 absent) and `as_of` is the "Statement as on" date. If a file has no such date, `as_of` falls back to the argument, then
 to the file's modification date.
 

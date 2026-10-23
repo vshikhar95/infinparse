@@ -83,6 +83,7 @@ All in `indian_finance_parsers.models`. Amounts are `Decimal`.
 | `name`, `isin` | `str` | instrument |
 | `units`, `price`, `value` | `Decimal` | quantity, unit price, units × price |
 | `matures` | `date \| None` | maturity date, for deposits and bonds |
+| `cost` | `Decimal \| None` | amount invested in the units held, as the document states it (CAS cost value; Zerodha average price × units); `None` if it doesn't say |
 | `nominee` | `str` | nominee names as printed (`; `-joined); `"NA"` if the document says none, `""` if it doesn't say |
 
 Whose holding it is (yours, joint, someone else's) isn't in any of these files, so it isn't a field. Subclass `Holding` in

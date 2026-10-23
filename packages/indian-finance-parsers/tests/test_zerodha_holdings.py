@@ -85,3 +85,19 @@ def test_in_memory_file_without_a_printed_date_needs_as_of(tmp_path):
         zerodha_holdings.parse(buf)
     buf.seek(0)
     assert zerodha_holdings.parse(buf, as_of=date(2026, 1, 2))[0].as_of == date(2026, 1, 2)
+
+
+def test_cost_is_average_price_times_units(tmp_path):
+    rows = zerodha_holdings.parse(_holdings_xlsx(tmp_path))
+    assert [(r.units, r.cost) for r in rows] == [(D(13), D(1300)), (D(4), D(800))]  # avg 100 x 13, 200 x 4
+
+
+def test_cost_is_none_without_an_average_price(tmp_path):
+    from openpyxl import load_workbook
+    p = _holdings_xlsx(tmp_path)
+    wb = load_workbook(p)
+    for row in wb.active.iter_rows():
+        if row[1].value == "Symbol":
+            row[9].value = "Avg (renamed)"  # the "Average Price" header cell (column B is index 1)
+    wb.save(p)
+    assert {r.cost for r in zerodha_holdings.parse(p)} == {None}

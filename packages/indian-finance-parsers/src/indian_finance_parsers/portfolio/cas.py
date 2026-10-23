@@ -18,7 +18,8 @@ def holdings_from_cas(data: dict) -> list[Holding]:
                 units, v = Decimal(0), {**v, "value": 0}
             out.append(Holding(date.fromisoformat(str(v["date"])), "cas", folio["folio"], s["scheme"], s["isin"],
                                units, Decimal(str(v["nav"])), Decimal(str(v["value"])),
-                               nominee="; ".join(s.get("nominees") or [])))
+                               nominee="; ".join(s.get("nominees") or []),
+                               cost=None if v.get("cost") is None else Decimal(str(v["cost"]))))  # some RTAs omit it
     return out
 
 

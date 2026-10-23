@@ -68,3 +68,17 @@ def test_wrong_password_names_only_the_file(monkeypatch):
 
 def test_nominees_as_the_statement_prints_them(seen):
     assert [r.nominee for r in cas.parse("cas.pdf")] == ["TEST NOMINEE ONE; TEST NOMINEE TWO", "", ""]
+
+
+def test_cost_as_the_statement_prints_it(monkeypatch):
+    import copy
+    data = copy.deepcopy(CAS)
+    data["folios"][0]["schemes"][0]["valuation"]["cost"] = 900.50
+    monkeypatch.setattr(casparser, "read_cas_pdf", lambda path, password: _Cas(data))
+    rows = cas.parse("cas.pdf")
+    assert rows[0].cost == Decimal("900.50")
+    assert rows[1].cost is None  # this RTA printed no cost value
+
+
+def test_cost_is_none_when_the_statement_has_none(seen):
+    assert {r.cost for r in cas.parse("cas.pdf")} == {None}

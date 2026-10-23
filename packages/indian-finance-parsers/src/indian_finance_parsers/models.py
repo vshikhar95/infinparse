@@ -25,6 +25,7 @@ class Holding:
     value: Decimal
     matures: date | None = None  # deposits and bonds: the maturity date the document states
     nominee: str = ""    # "; "-joined names as printed; "NA" = document says none; "" = document doesn't say
+    cost: Decimal | None = None  # amount invested in the units held, as the document states it; None if it doesn't
 
 
 @dataclass
