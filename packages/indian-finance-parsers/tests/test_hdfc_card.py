@@ -113,7 +113,7 @@ def test_rows_matching_the_summary_pass():
 
 
 def test_a_dropped_payment_rejects_the_file_without_amounts():
-    with pytest.raises(ValueError, match="^s.PDF: parsed credits don't match the statement's Payment/Credits") as e:
+    with pytest.raises(ValueError, match="^s.PDF: parsed credits don't match") as e:
         hdfc.check_summary(SUMMARY, SUMMARY_ROWS[1:], "s.PDF")
     assert "12" not in str(e.value)
 

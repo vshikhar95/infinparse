@@ -11,6 +11,7 @@ from decimal import Decimal
 
 import pdfplumber
 
+from indian_finance_parsers.checks import check_totals
 from indian_finance_parsers.models import Txn
 
 DATE = re.compile(r"(\d\d/\d\d/\d{4})\|?$")
@@ -92,14 +93,9 @@ def summary_from_words(words):
 
 
 def check_summary(summary, txns, name):
-    """Parsed credits must equal the box's Payment/Credits, and parsed debits its Purchase/Debits (plus Finance
-    Charges when those are printed as rows). Errors name the file and field, never amounts."""
-    credits = sum(t.amount for t in txns if t.amount > 0)
-    debits = -sum(t.amount for t in txns if t.amount < 0)
-    if credits != summary["credits"]:
-        raise ValueError(f"{name}: parsed credits don't match the statement's Payment/Credits (a row was missed)")
-    if debits not in (summary["debits"], summary["debits"] + summary["charges"]):
-        raise ValueError(f"{name}: parsed debits don't match the statement's Purchase/Debits (a row was missed)")
+    """The rows against the box: credits = Payment/Credits; debits = Purchase/Debits, plus Finance Charges when those
+    are printed as rows too."""
+    check_totals(txns, name, credits=summary["credits"], debits=[summary["debits"], summary["debits"] + summary["charges"]])
 
 
 def meta(path):

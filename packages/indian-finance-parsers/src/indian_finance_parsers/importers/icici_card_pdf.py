@@ -3,11 +3,13 @@ Filenames name the card product: '<card>_<n>_Retail_<Product>_NORM.pdf'; meta() 
 Rows: 'dd/mm/yyyy <ref> <description> <reward points> <amount>[ CR]'; add-on cards appear as section lines.
 The CSV export (icici_card.py) covers the same rows; a caller loading both should dedupe on date + amount."""
 import re
+from pathlib import Path
 from datetime import datetime
 from decimal import Decimal
 
 import pdfplumber
 
+from indian_finance_parsers.checks import check_totals
 from indian_finance_parsers.models import Txn
 
 # date, ref, description, [reward points], [foreign amount [currency]], INR amount, [CR]
@@ -21,7 +23,7 @@ def parse(path):
         summary = _summary(pdf.pages[0])
     txns = rows_from_lines(lines)
     if summary and txns:
-        check_totals(summary, txns)
+        check_summary(summary, txns, Path(getattr(path, "name", path)).name)
     return sorted(txns, key=lambda t: t.date)
 
 
@@ -68,14 +70,10 @@ def _summary(page):
     return [Decimal(w["text"].lstrip("`").replace(",", "")) for w in vals]
 
 
-def check_totals(summary, txns):
+def check_summary(summary, txns, name="statement"):
     """Rows must add up to the statement's own Purchases+Cash and Payments/Credits totals."""
     _prev, purchases, cash, credits = summary
-    debit = -sum(t.amount for t in txns if t.amount < 0)
-    credit = sum(t.amount for t in txns if t.amount > 0)
-    if debit != purchases + cash or credit != credits:
-        raise ValueError(f"rows don't match statement totals (debits {'ok' if debit == purchases + cash else 'off'}, "
-                         f"credits {'ok' if credit == credits else 'off'})")
+    check_totals(txns, name, credits=credits, debits=purchases + cash)
 
 
 def meta(path):

@@ -39,13 +39,13 @@ def test_card_section_sets_notes_for_following_rows_only(rows):
 
 
 def test_check_totals_ok(rows):
-    icici.check_totals([D("0"), D("2833.56"), D("0"), D("5000.00")], rows)
+    icici.check_summary([D("0"), D("2833.56"), D("0"), D("5000.00")], rows)
 
 
 def test_check_totals_debit_mismatch(rows):
-    with pytest.raises(ValueError, match="debits off, credits ok"):
-        icici.check_totals([D("0"), D("2833.55"), D("0"), D("5000.00")], rows)
+    with pytest.raises(ValueError, match="parsed debits don't match"):
+        icici.check_summary([D("0"), D("2833.55"), D("0"), D("5000.00")], rows)
 
 
 def test_check_totals_cash_advance_counts_as_debit(rows):
-    icici.check_totals([D("0"), D("2000.00"), D("833.56"), D("5000.00")], rows)
+    icici.check_summary([D("0"), D("2000.00"), D("833.56"), D("5000.00")], rows)

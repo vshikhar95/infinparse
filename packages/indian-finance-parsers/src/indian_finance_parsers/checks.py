@@ -44,3 +44,18 @@ def check_balance_chain(txns):
             raise ValueError(f"balance chain breaks at row {i}: the running balance doesn't follow from the "
                              "previous row")  # no amounts or descriptions: exceptions end up in logs
     return opening
+
+
+def check_totals(txns, name, *, credits=None, debits=None, tolerance=0):
+    """Compare parsed rows with the totals a statement prints about itself, so a dropped or misread row rejects the
+    file instead of slipping through. credits/debits: the printed total, a list of acceptable totals (when a document
+    may or may not print a component as rows), or None when the document doesn't print it. Each parser finds its own
+    printed figures; this only compares. Errors name the file and field, never amounts (they end up in logs)."""
+    for field, printed, parsed in (("credits", credits, sum(t.amount for t in txns if t.amount > 0)),
+                                   ("debits", debits, -sum(t.amount for t in txns if t.amount < 0))):
+        if printed is None:
+            continue
+        options = printed if isinstance(printed, (list, tuple, set)) else [printed]
+        if not any(abs(parsed - p) <= tolerance for p in options):
+            raise ValueError(f"{name}: parsed {field} don't match the statement's total {field} (a row was missed "
+                             "or misread)")
