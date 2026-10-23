@@ -15,6 +15,11 @@ One module per document: one institution's one export (Zerodha's holdings sheet,
 modules). Extra keyword arguments are for what the file itself can't supply and the parser can't do without, such as
 a password the parsing library needs (`cas.parse(path, password=)`).
 
+Optional extras: when a document carries more than `parse()` returns (a card statement's header figures, a deposit
+receipt's terms), add a second entry point with its own record in `models.py`, for example `summary(path) -> CardSummary`
+or `deposits(path) -> list[Deposit]`. `parse(path)` and its result stay unchanged, so existing callers never see the
+extra; the same rules apply (report the document, check it against itself, errors name the file and field).
+
 Rules:
 - **Report the document, don't judge it.** Return what the file says. Checking the file against itself (totals,
   running balances, row counts) belongs here; anything that needs today's date, the network, or knowledge about the

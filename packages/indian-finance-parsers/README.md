@@ -89,6 +89,20 @@ All in `indian_finance_parsers.models`. Amounts are `Decimal`.
 Whose holding it is (yours, joint, someone else's) isn't in any of these files, so it isn't a field. Subclass `Holding` in
 your own code if you track it.
 
+**`CardSummary`** (a card statement's header figures; `hdfc_card.summary(path)`, `icici_card_pdf.summary(path)`)
+
+| Field | Type | Meaning |
+|---|---|---|
+| `statement_date`, `due_date` | `date` | as printed |
+| `period_start`, `period_end` | `date \| None` | the billing period, where the layout prints it |
+| `total_due` | `Decimal` | negative when the statement prints a credit balance |
+| `minimum_due` | `Decimal` | |
+| `previous_balance`, `payments`, `purchases` | `Decimal` | the summary box; `payments` is positive |
+| `charges` | `Decimal \| None` | finance charges, where printed (HDFC) |
+| `cash_advances` | `Decimal \| None` | where printed (ICICI) |
+| `credit_limit`, `available_credit` | `Decimal` | |
+| `cash_limit`, `available_cash` | `Decimal \| None` | where printed |
+
 **`Trade`** (Zerodha tradebook row): `trade_id`, `date`, `symbol`, `isin`, `side` (`buy`/`sell`), `quantity`,
 `price`, `exchange`.
 

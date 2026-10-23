@@ -59,3 +59,15 @@ def check_totals(txns, name, *, credits=None, debits=None, tolerance=0):
         if not any(abs(parsed - p) <= tolerance for p in options):
             raise ValueError(f"{name}: parsed {field} don't match the statement's total {field} (a row was missed "
                              "or misread)")
+
+
+def check_card_summary(s, name):
+    """Sanity of a card statement's header figures (a CardSummary): the minimum can't exceed the total, available
+    can't exceed the limit, the due date can't precede the statement. Errors name the file and field, never amounts."""
+    for field, ok in (("minimum_due", s.total_due <= 0 or s.minimum_due <= s.total_due),
+                      ("available_credit", s.available_credit <= s.credit_limit),
+                      ("available_cash", s.cash_limit is None or s.available_cash is None
+                       or s.available_cash <= s.cash_limit),
+                      ("due_date", s.due_date >= s.statement_date)):
+        if not ok:
+            raise ValueError(f"{name}: {field} is inconsistent with the other figures the statement prints")

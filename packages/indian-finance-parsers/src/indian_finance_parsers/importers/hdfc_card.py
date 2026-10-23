@@ -11,8 +11,9 @@ from decimal import Decimal
 
 import pdfplumber
 
-from indian_finance_parsers.checks import check_totals
-from indian_finance_parsers.models import Txn
+from indian_finance_parsers._words import below, label, right
+from indian_finance_parsers.checks import check_card_summary, check_totals
+from indian_finance_parsers.models import CardSummary, Txn
 
 DATE = re.compile(r"(\d\d/\d\d/\d{4})\|?$")
 TIME = re.compile(r"\d\d:\d\d(:\d\d)?$")
@@ -90,6 +91,58 @@ def summary_from_words(words):
     if abs(opening - credits + debits + charges - total) > 1:  # HDFC rounds the printed total (off by up to ₹1)
         return None
     return {"opening": opening, "credits": credits, "debits": debits, "charges": charges, "total": total}
+
+
+def summary(path) -> CardSummary:
+    """The statement's header figures: dates, total and minimum due, the summary box, and the limits. Optional extra
+    next to parse(); raises ValueError (file + field) if a figure the layout prints is missing or inconsistent."""
+    with pdfplumber.open(path) as pdf:
+        return card_summary(pdf.pages[0].extract_words(), Path(getattr(path, "name", path)).name)
+
+
+NEW_DATE = r"\d\d? [A-Za-z]{3}, \d{4}"
+AMT = r"[C₹`]?[\d,]+(?:\.\d\d)?"
+LABELS = {  # label words per figure: 2025+ layout, then 2024 layout
+    True: dict(credit_limit=("TOTAL", "CREDIT", "LIMIT"), available_credit=("AVAILABLE", "CREDIT", "LIMIT"),
+               available_cash=("AVAILABLE", "CASH", "LIMIT"), minimum_due=("MINIMUM", "DUE")),
+    False: dict(credit_limit=("Credit", "Limit"), available_credit=("Available", "Credit", "Limit"),
+                available_cash=("Available", "Cash", "Limit"), minimum_due=("Minimum", "Amount", "Due"),
+                total_due=("Total", "Dues"))}
+
+
+def card_summary(words, name) -> CardSummary:
+    """CardSummary from page-0 words ({"text","x0","x1","top"}), read by position relative to the printed labels.
+    Only the 2025+ layout prints the billing period. Neither layout prints the cash limit itself (cash_limit is None),
+    only the available cash."""
+    box = summary_from_words(words)
+    if box is None:
+        raise ValueError(f"{name}: statement summary box not found or doesn't add up")
+    new = any(w["text"] == "PREVIOUS" for w in words)
+
+    def need(field, v):
+        if v is None:
+            raise ValueError(f"{name}: {field} not found")
+        return v
+
+    fig = {f: Decimal(re.sub(r"[^\d.]", "", need(f, below(words, label(words, *l), AMT))))
+           for f, l in LABELS[new].items()}
+    if new:
+        day = lambda f, t: datetime.strptime(need(f, t), "%d %b, %Y").date()
+        statement = day("statement_date", right(words, label(words, "Statement", "Date"), NEW_DATE))
+        period = need("period", right(words, label(words, "Billing", "Period"), f"{NEW_DATE} - {NEW_DATE}")).split(" - ")
+        start, end = day("period", period[0]), day("period", period[1])
+        due = day("due_date", below(words, label(words, "DUE", "DATE"), NEW_DATE))
+        fig["total_due"] = box["total"]
+    else:
+        day = lambda f, t: datetime.strptime(need(f, t), "%d/%m/%Y").date()
+        statement = day("statement_date", next((m[1] for w in words if (m := re.fullmatch(r"Date:(\d\d/\d\d/\d{4})", w["text"]))), None))
+        start = end = None
+        due = day("due_date", below(words, label(words, "Payment", "Due", "Date"), r"\d\d/\d\d/\d{4}"))
+    s = CardSummary(statement_date=statement, due_date=due, period_start=start, period_end=end,
+                    previous_balance=box["opening"], payments=box["credits"], purchases=box["debits"],
+                    charges=box["charges"], **fig)
+    check_card_summary(s, name)
+    return s
 
 
 def check_summary(summary, txns, name):

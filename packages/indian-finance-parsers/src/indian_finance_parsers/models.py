@@ -38,3 +38,24 @@ class Trade:
     quantity: Decimal
     price: Decimal
     exchange: str = "NSE"
+
+
+@dataclass
+class CardSummary:
+    """A credit card statement's own header figures. Optional extras: `summary(path)` next to `parse(path)`."""
+    statement_date: date
+    due_date: date
+    total_due: Decimal       # negative when the statement prints a credit balance
+    minimum_due: Decimal
+    previous_balance: Decimal
+    payments: Decimal        # payments and credits, positive
+    purchases: Decimal
+    credit_limit: Decimal
+    available_credit: Decimal
+    period_start: date | None = None
+    period_end: date | None = None
+    charges: Decimal | None = None        # finance charges, where the layout prints them (HDFC)
+    cash_advances: Decimal | None = None  # where the layout prints them (ICICI)
+    cash_limit: Decimal | None = None     # the cash limit itself, where printed
+    available_cash: Decimal | None = None
+

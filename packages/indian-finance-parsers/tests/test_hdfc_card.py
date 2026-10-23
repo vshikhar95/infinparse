@@ -127,3 +127,83 @@ def test_the_due_date_line_is_not_a_transaction():
     # the header prints "<due date> <total due> <minimum due>": dated, but no time and no Cr, so not a row
     rows = [[w("15/06/2024", 300), w("13,316.00", 380), w("666.00", 460)]]
     assert hdfc.rows_from_words(rows, coins_x=None) == []
+
+
+def _page(*items):
+    """Words (text, x0, top) with x1 estimated from the text, placed as in the real page 0."""
+    return [{"text": t, "x0": x, "x1": x + 6 * len(t), "top": top} for t, x, top in items]
+
+
+# 2025+ layout, invented values, label and figure positions as printed
+NEW_PAGE = _page(
+    ("Statement", 193, 120.2), ("Date", 224, 120.2), ("05", 340, 120.2), ("Jan,", 349, 120.2), ("2031", 362, 120.2),
+    ("Billing", 193, 134.9), ("Period", 211, 134.9), ("06", 298, 134.9), ("Dec,", 307, 134.9), ("2030", 321, 134.9),
+    ("-", 337, 134.9), ("05", 340, 134.9), ("Jan,", 349, 134.9), ("2031", 362, 134.9),
+    ("PREVIOUS", 39, 219.5), ("STATEMENT", 71, 219.5), ("DUES", 108, 219.5),
+    ("TOTAL", 445, 220.1), ("AMOUNT", 466, 220.1), ("DUE", 495, 220.1), ("C1,510.00", 445, 235.2),
+    ("C1,000.00", 63, 242.2), ("C12,000.00", 167, 242.2), ("C12,500.00", 267, 242.2), ("C10.00", 371, 242.2),
+    ("TOTAL", 64, 266.9), ("CREDIT", 85, 266.9), ("LIMIT", 107, 266.9), ("(Including", 71, 275.4), ("Cash)", 101, 275.4),
+    ("AVAILABLE", 182, 271.2), ("CREDIT", 216, 271.2), ("LIMIT", 238, 271.2),
+    ("AVAILABLE", 317, 271.2), ("CASH", 351, 271.2), ("LIMIT", 368, 271.2),
+    ("MINIMUM", 445, 272.9), ("DUE", 478, 272.9), ("DUE", 512, 272.9), ("DATE", 526, 272.9),
+    ("C150.00", 445, 289.7), ("25", 512, 289.7), ("Jan,", 522, 289.7), ("2031", 537, 289.7),
+    ("C5,00,000", 77, 293.8), ("C4,00,000", 202, 293.8), ("C80,000", 338, 293.8))
+
+# 2024 layout
+OLD_PAGE = _page(
+    ("Statement", 252, 73.9), ("Date:05/01/2030", 293, 73.9),
+    ("Payment", 267, 95.9), ("Due", 303, 95.9), ("Date", 321, 95.9), ("Total", 396, 95.9), ("Dues", 418, 95.9),
+    ("Minimum", 488, 95.9), ("Amount", 525, 95.9), ("Due", 557, 95.9),
+    ("25/01/2030", 284, 117.3), ("1,510.00", 401, 117.3), ("150.00", 519, 117.3),
+    ("Credit", 281, 139.4), ("Limit", 306, 139.4), ("Available", 376, 139.4), ("Credit", 413, 139.4),
+    ("Limit", 439, 139.4), ("Available", 491, 139.4), ("Cash", 528, 139.4), ("Limit", 550, 139.4),
+    ("5,00,000", 289, 161.3), ("4,00,000", 403, 161.3), ("80,000", 519, 161.3),
+    ("Opening", 264, 200.4), ("Payment/", 329, 200.4), ("Purchase/", 396, 200.4), ("Finance", 469, 200.4),
+    ("Total", 532, 205.4), ("Dues", 554, 205.4),
+    ("1,000.00", 267, 230.3), ("12,000.00", 333, 230.3), ("12,500.00", 401, 230.3), ("10.00", 478, 230.3),
+    ("1,510.00", 537, 230.3))
+
+
+@pytest.mark.parametrize("page", [NEW_PAGE, OLD_PAGE])
+def test_card_summary_in_both_layouts(page):
+    s = hdfc.card_summary(page, "s.PDF")
+    assert (s.total_due, s.minimum_due, s.previous_balance, s.payments, s.purchases, s.charges) == (
+        D("1510.00"), D("150.00"), D("1000.00"), D("12000.00"), D("12500.00"), D("10.00"))
+    assert (s.credit_limit, s.available_credit, s.cash_limit, s.available_cash) == (
+        D(500000), D(400000), None, D(80000)) if page is NEW_PAGE else (D(500000), D(400000), None, D(80000))
+    assert (s.statement_date, s.due_date) == (date(2031, 1, 5), date(2031, 1, 25)) if page is NEW_PAGE else (
+        date(2030, 1, 5), date(2030, 1, 25))
+
+
+def test_card_summary_period_only_in_the_new_layout():
+    s = hdfc.card_summary(NEW_PAGE, "s.PDF")
+    assert (s.period_start, s.period_end) == (date(2030, 12, 6), date(2031, 1, 5))
+    assert hdfc.card_summary(OLD_PAGE, "s.PDF").period_start is None
+
+
+def _without(page, text):
+    return [w for w in page if w["text"] != text]
+
+
+@pytest.mark.parametrize("page,text,field", [(NEW_PAGE, "C80,000", "available_cash"), (OLD_PAGE, "25/01/2030", "due_date"),
+                                             (OLD_PAGE, "Date:05/01/2030", "statement_date")])
+def test_a_missing_figure_raises_naming_file_and_field(page, text, field):
+    with pytest.raises(ValueError, match=f"^s.PDF: {field} not found"):
+        hdfc.card_summary(_without(page, text), "s.PDF")
+
+
+def _swap(page, old, new):
+    return [dict(w, text=new) if w["text"] == old else w for w in page]
+
+
+@pytest.mark.parametrize("old,new,field", [("150.00", "9,150.00", "minimum_due"), ("4,00,000", "9,00,000", "available_credit"),
+                                           ("25/01/2030", "04/01/2030", "due_date")])
+def test_inconsistent_figures_raise_without_amounts(old, new, field):
+    with pytest.raises(ValueError, match=f"^s.PDF: {field} is inconsistent") as e:
+        hdfc.card_summary(_swap(OLD_PAGE, old, new), "s.PDF")
+    assert "150" not in str(e.value)
+
+
+def test_a_box_that_doesnt_add_up_raises():
+    with pytest.raises(ValueError, match="^s.PDF: statement summary box"):
+        hdfc.card_summary(_swap(OLD_PAGE, "12,500.00", "99.00"), "s.PDF")
