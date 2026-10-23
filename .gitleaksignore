@@ -16,3 +16,5 @@ tests/test_anonymise.py:indian-mobile:17
 tests/test_anonymise.py:indian-mobile:36
 tests/test_anonymise.py:indian-pan:16
 tests/test_anonymise.py:indian-pan:35
+# synthetic Blinkit export: a raw 4111 test card the parser must mask
+packages/purchase-history-parsers/tests/fixtures/blinkit_orders.json:aadhaar:12

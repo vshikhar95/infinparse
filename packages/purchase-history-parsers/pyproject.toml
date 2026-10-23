@@ -1,7 +1,7 @@
 [project]
 name = "purchase-history-parsers"
 dynamic = ["version"]  # from the git tag <package>-v<version>; see [tool.hatch.version]
-description = "Parse store purchase histories (Steam, Google Play, Humble Bundle, Amazon, PlayStation) into plain Python records."
+description = "Parse store purchase histories (Steam, Google Play, Humble Bundle, Blinkit, Amazon, PlayStation) into plain Python records."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]

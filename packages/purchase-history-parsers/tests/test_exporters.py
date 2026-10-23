@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from purchase_history_parsers import google_play, humble, steam
+from purchase_history_parsers import blinkit, google_play, humble, steam
 
 EXPORTERS = Path(__file__).parent.parent / "exporters"
 pytestmark = pytest.mark.skipif(not shutil.which("node"), reason="needs node")
@@ -78,9 +78,33 @@ def test_google_play_export_keeps_only_order_lines(tmp_path):
                                                               ("Demo App Pro", D("99.00"), True)]
 
 
+# one order from /v1/layout/order_history and its /v1/layout/order_details_v2, trimmed to what the exporter reads (invented)
+BLINKIT_LIST = {"data": {"items": [{"tracking": {"common_attributes": {
+    "order_id": "ORD1", "order_status": "DELIVERED", "deeplink": "blinkit://order?cart_id=777"}},
+    "data": {"subtitle": {"text": "₹150 • 01 Mar 2024"}}}]}}
+BLINKIT_DETAIL = {"response": {"snippets": [
+    {"widget_type": "image_text_snippet_type_30", "data": {"title": {"text": "Test Milk 500ml"}, "subtitle1": {"text": "500 ml x 2"},
+                                                         "subtitle3": {"text": "~~₹60~~ ₹100"}}},
+    {"widget_type": "cart_bill_item", "data": {"left_header": {"text": "Bill total"}, "right_header": {"text": "₹150"}}},
+    {"widget_type": "text", "data": {"title": {"text": "Paid via Card (XXXX XXXX 4111)"}}},
+    {"widget_type": "text", "data": {"title": {"text": "Deliver to"}, "subtitle1": {"text": "1 Fake Street, Nowhere 400001"}}}]}}
+
+
+def test_blinkit_export_masks_card_and_is_what_the_parser_reads(tmp_path):
+    out = node(f"""
+        const {{ toRecord }} = require({json.dumps(str(EXPORTERS / "blinkit.user.js"))});
+        console.log(JSON.stringify([toRecord({json.dumps(BLINKIT_LIST)}, {json.dumps(BLINKIT_DETAIL)}, "2026-10-23T10:00:00Z")]));""")
+    assert "4111" not in out and "Fake Street" not in out and "400001" not in out
+    (tmp_path / "blinkit_orders.json").write_text(out)
+    [p] = blinkit.parse(tmp_path / "blinkit_orders.json")
+    assert (p.order_id, p.date, p.amount, p.payment, p.items) == (
+        "ORD1", date(2024, 3, 1), D("150"), "Card", "Test Milk 500ml ×2")
+
+
 @pytest.mark.parametrize("script,host", [("steam.user.js", "store.steampowered.com"),
                                          ("google_play.user.js", "play.google.com"),
-                                         ("humble.user.js", "www.humblebundle.com")])
+                                         ("humble.user.js", "www.humblebundle.com"),
+                                         ("blinkit.user.js", "blinkit.com")])
 def test_exporter_header_stays_least_privilege(script, host):
     header = (EXPORTERS / script).read_text().split("// ==/UserScript==")[0]
     grants = [line.split(None, 2)[2].strip() for line in header.splitlines() if line.startswith("// @grant")]

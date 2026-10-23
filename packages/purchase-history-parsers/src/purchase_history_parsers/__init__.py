@@ -1,4 +1,4 @@
-"""Parse store purchase histories (Steam, Google Play, Humble Bundle, Amazon, PlayStation Store) into plain records.
+"""Parse store purchase histories (Steam, Google Play, Humble Bundle, Blinkit, Amazon, PlayStation Store) into plain records.
 
 One module per store export, each exposing `parse(path) -> list[Purchase]`. Parsers read files only; the browser
 exporters in `exporters/` produce those files from your own logged-in session."""
