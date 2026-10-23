@@ -39,8 +39,10 @@ Fakes keep their length, so columns don't shift; the same original gets the same
 ## Known limits
 
 - A name made only of dictionary words ("Grace Hill") is skipped by NER as if it were a label. Only the denylist
-  catches it, so a third party (a nominee, a UPI payee) with such a name can pass through. Look at the output of each
-  new document type yourself before relying on it.
+  catches it, so a third party (a nominee, a UPI payee) with such a name can pass through. Measured on six real
+  documents (two card PDFs, an FD receipt, an SGB certificate, a savings sheet, a holdings sheet): 105 hits were kept
+  this way, almost all fund and stock names; 2 were personal (one UPI id, one friend's name); the fix is to add such names to the
+  denylist. Look at the output of each new document type yourself before relying on it.
 - NER over-replaces: some merchant words and stock names get fakes too.
 - IFSC codes and card BINs become fakes, so the branch or issuer can't be read from them.
 - No word coordinates: PDFs come out as layout text, not pdfplumber's x/y positions.
