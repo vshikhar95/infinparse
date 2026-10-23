@@ -103,6 +103,19 @@ your own code if you track it.
 | `credit_limit`, `available_credit` | `Decimal` | |
 | `cash_limit`, `available_cash` | `Decimal \| None` | where printed |
 
+**`Deposit`** (a fixed deposit's terms; `shriram.deposits(path)`, `bajaj_fd.deposits(path)`)
+
+| Field | Type | Meaning |
+|---|---|---|
+| `deposit_no` | `str` | as printed |
+| `deposited`, `matures` | `date` | |
+| `amount`, `maturity_amount` | `Decimal` | deposit amount; amount payable at maturity |
+| `rate` | `Decimal \| None` | % p.a., where printed |
+| `tenure_months` | `int \| None` | where printed |
+| `scheme` | `str` | as printed, e.g. `Cumulative` |
+| `interest_payout` | `str` | as printed, e.g. `Payable on Maturity`; `""` if not printed |
+| `nominee` | `str` | same convention as `Holding.nominee` |
+
 **`Trade`** (Zerodha tradebook row): `trade_id`, `date`, `symbol`, `isin`, `side` (`buy`/`sell`), `quantity`,
 `price`, `exchange`.
 

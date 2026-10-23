@@ -21,6 +21,12 @@ the deposit amount, `account` = the deposit number, `matures` = the maturity dat
 (`"NA"` when the receipt says none). The name carries the rate and the
 maturity amount. Whether a deposit has matured, and what it is worth today, is your judgement.
 
+Optional: `deposits(path) -> list[Deposit]`, the receipt's terms as printed: deposit number, deposit date and amount,
+rate (% p.a.), tenure in months, maturity date and amount, scheme (`"Cumulative"`), interest payout
+(`"Payable on Maturity"`, `""` if not printed) and nominee. The terms are checked against each other: maturity after
+the deposit date, the printed tenure within a month of the two dates, and a cumulative scheme paying out more than
+was deposited. A failure raises `ValueError` naming the file and field. `parse()` is unaffected.
+
 ## Assumptions and quirks
 - Dates are `dd-mm-yyyy`; amounts are INR.
 - Missing deposit number, dates or amount raises `ValueError`.

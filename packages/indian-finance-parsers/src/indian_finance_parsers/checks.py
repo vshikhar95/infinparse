@@ -1,4 +1,5 @@
 """Reconciliation checks over parsed statement rows."""
+import re
 from itertools import groupby, permutations
 
 
@@ -71,3 +72,15 @@ def check_card_summary(s, name):
                       ("due_date", s.due_date >= s.statement_date)):
         if not ok:
             raise ValueError(f"{name}: {field} is inconsistent with the other figures the statement prints")
+
+
+def check_deposit(d, name):
+    """A fixed deposit's receipt against itself (a Deposit): it matures after it starts, the printed tenure matches
+    the dates (±1 month), and a cumulative scheme pays out more than was put in. Errors name the file and field."""
+    months = (d.matures.year - d.deposited.year) * 12 + d.matures.month - d.deposited.month
+    cumulative = re.sub(r"[^a-z]", "", d.scheme.lower()).startswith("cumulative")  # "Non-Cumulative" pays interest out
+    for field, ok in (("matures", d.matures > d.deposited),
+                      ("tenure_months", d.tenure_months is None or abs(months - d.tenure_months) <= 1),
+                      ("maturity_amount", not cumulative or d.maturity_amount > d.amount)):
+        if not ok:
+            raise ValueError(f"{name}: {field} is inconsistent with the other figures the receipt prints")

@@ -59,3 +59,18 @@ class CardSummary:
     cash_limit: Decimal | None = None     # the cash limit itself, where printed
     available_cash: Decimal | None = None
 
+
+
+@dataclass
+class Deposit:
+    """A fixed deposit as its receipt states it. Optional extra: `deposits(path)` next to `parse(path)`."""
+    deposit_no: str
+    deposited: date
+    amount: Decimal
+    rate: Decimal | None     # % p.a., where printed
+    tenure_months: int | None
+    matures: date
+    maturity_amount: Decimal
+    scheme: str              # as printed, e.g. "Cumulative"
+    interest_payout: str     # as printed, e.g. "Payable on Maturity"; "" if not printed
+    nominee: str = ""        # same convention as Holding.nominee
