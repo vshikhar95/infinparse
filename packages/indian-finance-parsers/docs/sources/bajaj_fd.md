@@ -30,4 +30,4 @@ interest payout (as printed) and maturity amount.
   the deposit date, and the maturity date must be the deposit date plus the tenure (months and days) within 3 days; otherwise `ValueError` names the file and
   field, never amounts.
 - Text without `Bajaj Finance` and the `DEPOSIT NUMBER:` header, or without the deposit row, raises `ValueError`.
-- The interest payout line (`Interest Payment <label> : <value>`) and the `Nominee n :` slots are optional.
+- The interest payout line (`Interest Payment Frequency : <value>`) and the `Nominee n :` slots are optional.

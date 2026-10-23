@@ -23,8 +23,7 @@ maturity amount. Whether a deposit has matured, and what it is worth today, is y
 
 Optional: `deposits(path) -> list[Deposit]`, the receipt's terms as printed: deposit number, deposit date and amount,
 rate (% p.a.), tenure in months, maturity date and amount, scheme (`"Cumulative"`), interest payout
-(`"Payable on Maturity"`, read from the `Interest <9-letter word> : <payout>` line; `""` if absent, and never an
-`Interest Rate :` line) and nominee. The terms are checked against each other: maturity after
+(`"Payable on Maturity"`, read from the `Interest Frequency : <payout>` line; `""` if absent) and nominee. The terms are checked against each other: maturity after
 the deposit date, the maturity date within 3 days of the deposit date plus the printed tenure, and a cumulative scheme paying out more than
 was deposited. A failure raises `ValueError` naming the file and field. `parse()` is unaffected.
 

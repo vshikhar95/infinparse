@@ -30,7 +30,7 @@ def deposit_from_text(text, name="receipt") -> Deposit:
     row = ROW.search(text)
     if "Bajaj Finance" not in text or not (no and row):
         raise ValueError("not a Bajaj Finance FD receipt (missing deposit number or the deposit row)")
-    payout = re.search(r"Interest Payment \w+ ?: (.+)$", text, re.M)
+    payout = re.search(r"Interest Payment Frequency ?: (.+)$", text, re.M)
     nominees = "; ".join(n for n in (m.strip() for m in re.findall(r"Nominee \d+ ?:[ \t]*(.*)$", text, re.M)) if n)
     amount, interest, maturity = (read(name, f, Decimal, row[i].replace(",", ""))
                                   for f, i in (("deposit amount", 7), ("interest amount", 8), ("maturity amount", 9)))

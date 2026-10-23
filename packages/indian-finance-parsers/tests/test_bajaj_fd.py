@@ -92,3 +92,8 @@ def test_unreadable_dates_raise_without_the_value():
     with pytest.raises(ValueError) as e:
         bajaj_fd.deposit_from_text(RECEIPT.replace("01-01-2027", "99-99-2027"), "r.pdf")
     assert str(e.value) == "r.pdf: maturity date is unreadable"
+
+
+def test_a_long_period_cell():
+    d = bajaj_fd.deposit_from_text(RECEIPT.replace("12M 0D 01-01-2027", "31M 0D 01-08-2028"))
+    assert (d.tenure_months, d.tenure_days) == (31, 0)

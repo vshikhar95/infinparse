@@ -126,6 +126,5 @@ def test_unreadable_dates_raise_without_the_value():
 
 
 def test_other_interest_lines_are_not_the_payout():
-    t = FULL.replace("Interest Frequency : Payable on Maturity", "Interest Rate : 7.00 %\nInterest Amount : 112500.00\nInterest Component : 5")
-    assert shriram.deposit_from_text(t).interest_payout == "5"  # a 9-letter label is accepted; Rate and Amount are not
-    assert shriram.deposit_from_text(t.replace("Interest Component : 5", "")).interest_payout == ""
+    t = FULL.replace("Interest Frequency : Payable on Maturity", "Interest Rate : 7.00 %\nInterest Amount : 112500.00")
+    assert shriram.deposit_from_text(t).interest_payout == ""
