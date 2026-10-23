@@ -33,8 +33,8 @@ def deposit_from_text(text, name="receipt") -> Deposit:
     row = ROW.search(text)
     if "Bajaj Finance" not in text or not (no and row):
         raise ValueError("not a Bajaj Finance FD receipt (missing deposit number or the deposit row)")
-    payout = re.search(r"^Interest Payment \w+ ?: (.+)$", text, re.M)
-    nominees = "; ".join(n for n in (m.strip() for m in re.findall(r"^Nominee \d+ ?:[ \t]*(.*)$", text, re.M)) if n)
+    payout = re.search(r"Interest Payment \w+ ?: (.+)$", text, re.M)
+    nominees = "; ".join(n for n in (m.strip() for m in re.findall(r"Nominee \d+ ?:[ \t]*(.*)$", text, re.M)) if n)
     amount, interest, maturity = _money(row[7]), _money(row[8]), _money(row[9])
     if abs(amount + interest - maturity) > 1:
         raise ValueError(f"{name}: maturity_amount doesn't equal the deposit amount plus the interest amount")

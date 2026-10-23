@@ -71,3 +71,10 @@ def test_parse_and_deposits_read_a_pdf_and_name_the_file(tmp_path):
     pdf.output(str(q))
     with pytest.raises(ValueError, match="^other.pdf: not a Bajaj Finance FD receipt"):
         bajaj_fd.parse(q)
+
+
+def test_nominee_and_payout_mid_line_are_read():
+    t = RECEIPT.replace("Nominee 1 :", "Bank Account Number : 00000000000 Nominee 1 :").replace(
+        "Interest Payment", "Branch: XX Interest Payment")
+    d = bajaj_fd.deposit_from_text(t)
+    assert (d.nominee, d.interest_payout) == ("TEST NOMINEE ONE; TEST NOMINEE TWO", "OnMaturity")
