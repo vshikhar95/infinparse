@@ -36,7 +36,7 @@ def parse(path, as_of: date | None = None) -> list[Holding]:
         raise ValueError(f"{getattr(path, 'name', 'file')}: no statement date in the file; pass as_of")
     as_of = printed or as_of or date.fromtimestamp(Path(path).stat().st_mtime)
     ix = {h: i for i, h in enumerate(hdr)}
-    out, invested, present = [], Decimal(0), Decimal(0)
+    out, invested, present, held = [], Decimal(0), Decimal(0), Decimal(0)
     for r in rows:
         if not r[ix["Symbol"]]:
             break
@@ -44,15 +44,18 @@ def parse(path, as_of: date | None = None) -> list[Holding]:
         price = _dec(r[ix["Previous Closing Price"]])
         avg = _dec(r[ix["Average Price"]]) if "Average Price" in ix else Decimal(0)
         isin = r[ix["ISIN"]]
-        if not isin and re.fullmatch(r"IN[A-Z0-9]{10}", str(r[ix["Symbol"]])):
+        if not isin and re.fullmatch(r"IN[A-Z0-9]{9}\d", str(r[ix["Symbol"]])):
             isin = r[ix["Symbol"]]  # an unlisted bond (54EC) is listed under its ISIN with the ISIN cell blank
         invested += units * avg
+        held += units
         present += units * price
         out.append(Holding(as_of, "zerodha", client, r[ix["Symbol"]], isin, units, price, units * price,
                            cost=units * avg if avg else None))  # the sheet's average buy price x the units held
     name = Path(getattr(path, "name", path)).name  # the sheet's own totals: a dropped or misread row rejects the file
-    for field, printed_total, parsed in (("Invested Value", totals.get("Invested Value"), invested if "Average Price" in ix else None),
-                                         ("Present Value", totals.get("Present Value"), present)):
-        if printed_total is not None and parsed is not None and abs(parsed - printed_total) > 1:  # real sheets are ₹0.01 off
+    for field, printed_total, parsed, tol in (
+            ("Invested Value", totals.get("Invested Value"), invested if "Average Price" in ix else None,
+             held * Decimal("0.005") + 1),  # the sheet rounds each average price, so the error grows with the units held
+            ("Present Value", totals.get("Present Value"), present, 1)):
+        if printed_total is not None and parsed is not None and abs(parsed - printed_total) > tol:
             raise ValueError(f"{name}: parsed {field} doesn't match the sheet's {field} (a row was missed or misread)")
     return out

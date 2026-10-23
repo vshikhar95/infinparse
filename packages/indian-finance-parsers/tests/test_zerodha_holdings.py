@@ -150,3 +150,23 @@ def _set_isin(p, symbol, isin):
             row[2].value = isin
     wb.save(p)
     return p
+
+
+def test_a_real_symbol_that_looks_like_an_isin_is_not_one(tmp_path):
+    p = _set_isin(_holdings_xlsx(tmp_path), "FAKECO", None)  # blank ISIN
+    from openpyxl import load_workbook
+    wb = load_workbook(p)
+    for row in wb.active.iter_rows():
+        if row[1].value == "FAKECO":
+            row[1].value = "INDIGOPAINTS"  # IN + 10 letters, but ISINs end in a digit
+    wb.save(p)
+    assert zerodha_holdings.parse(p)[0].isin is None
+
+
+def test_invested_value_tolerance_grows_with_the_units_held(tmp_path):
+    # 17 units held: ₹1 + 17 x 0.005 = ₹1.085 of slack
+    zerodha_holdings.parse(_with_totals(tmp_path, 2101.08, 2796.5))
+    with pytest.raises(ValueError, match="Invested Value"):
+        zerodha_holdings.parse(_with_totals(tmp_path, 2101.09, 2796.5))
+    with pytest.raises(ValueError, match="Present Value"):
+        zerodha_holdings.parse(_with_totals(tmp_path, 2100, 2797.6))
