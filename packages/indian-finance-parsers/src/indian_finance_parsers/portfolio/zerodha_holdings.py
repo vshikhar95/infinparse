@@ -43,9 +43,12 @@ def parse(path, as_of: date | None = None) -> list[Holding]:
         units = sum(_dec(r[ix[q]]) for q in QTY)
         price = _dec(r[ix["Previous Closing Price"]])
         avg = _dec(r[ix["Average Price"]]) if "Average Price" in ix else Decimal(0)
+        isin = r[ix["ISIN"]]
+        if not isin and re.fullmatch(r"IN[A-Z0-9]{10}", str(r[ix["Symbol"]])):
+            isin = r[ix["Symbol"]]  # an unlisted bond (54EC) is listed under its ISIN with the ISIN cell blank
         invested += units * avg
         present += units * price
-        out.append(Holding(as_of, "zerodha", client, r[ix["Symbol"]], r[ix["ISIN"]], units, price, units * price,
+        out.append(Holding(as_of, "zerodha", client, r[ix["Symbol"]], isin, units, price, units * price,
                            cost=units * avg if avg else None))  # the sheet's average buy price x the units held
     name = Path(getattr(path, "name", path)).name  # the sheet's own totals: a dropped or misread row rejects the file
     for field, printed_total, parsed in (("Invested Value", totals.get("Invested Value"), invested if "Average Price" in ix else None),
