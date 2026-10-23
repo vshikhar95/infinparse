@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pdfplumber
 
+from indian_finance_parsers._words import read
 from indian_finance_parsers.checks import check_deposit
 from indian_finance_parsers.models import Deposit, Holding
 
@@ -20,8 +21,8 @@ def _d(s):
 
 def _fields(text):
     no = re.search(r"Deposit No\. ([A-Z]+-\d+)", text)
-    row = re.search(D8 + r" (\d+) \*?([\d,]+\.\d\d) " + D8, text)  # deposit date, months, maturity amount, maturity date
-    amount = re.search(r"Deposit Amount : ₹?([\d,]+\.\d\d)", text)
+    row = re.search(D8 + r" (\d+) \*?(\d[\d,]*\.\d\d) " + D8, text)  # deposit date, months, maturity amount, maturity date
+    amount = re.search(r"Deposit Amount : ₹?(\d[\d,]*\.\d\d)", text)
     rate = re.search(r"(?<![\d.])([\d.]{1,8}) % p\.a\.", text)
     nominee = (re.search(r"Nominee : (.+)", text) or [None, ""])[1].strip()
     if not (no and row and amount):
@@ -29,12 +30,13 @@ def _fields(text):
     return no, row, amount, rate, "NA" if nominee.upper() in ("NA", "N.A.", "NIL", "-") else nominee  # NA = receipt says none
 
 
-def holding_from_text(text) -> Holding:
+def holding_from_text(text, name="receipt") -> Holding:
     no, row, amount, rate, nominee = _fields(text)
-    value = Decimal(amount[1].replace(",", ""))
-    return Holding(as_of=_d(row[1]), source="shriram", account=no[1], isin=no[1],
+    value = read(name, "deposit amount", Decimal, amount[1].replace(",", ""))
+    return Holding(as_of=read(name, "deposit date", _d, row[1]), source="shriram", account=no[1], isin=no[1],
                    name=f"Shriram FD {no[1]} @ {rate[1] if rate else '?'}%, {row[3]} at maturity",
-                   units=Decimal(1), price=value, value=value, matures=_d(row[4]), nominee=nominee)
+                   units=Decimal(1), price=value, value=value, matures=read(name, "maturity date", _d, row[4]),
+                   nominee=nominee)
 
 
 def deposit_from_text(text, name="receipt") -> Deposit:
@@ -42,29 +44,31 @@ def deposit_from_text(text, name="receipt") -> Deposit:
     no, row, amount, rate, nominee = _fields(text)
     scheme = re.search(r"Deposit No\. \S+ Scheme (.+)", text)
     payout = re.search(r"Interest \w+ ?: (.+)$", text, re.M)
-    try:
-        pct = Decimal(rate[1]) if rate else None
-    except ArithmeticError:
-        raise ValueError(f"{name}: rate is unreadable") from None
-    d = Deposit(deposit_no=no[1], deposited=_d(row[1]), amount=Decimal(amount[1].replace(",", "")), rate=pct,
-                tenure_months=int(row[2]), matures=_d(row[4]), maturity_amount=Decimal(row[3].replace(",", "")),
+    d = Deposit(deposit_no=no[1], deposited=read(name, "deposit date", _d, row[1]),
+                amount=read(name, "deposit amount", Decimal, amount[1].replace(",", "")),
+                rate=read(name, "rate", Decimal, rate[1]) if rate else None,
+                tenure_months=int(row[2]), matures=read(name, "maturity date", _d, row[4]),
+                maturity_amount=read(name, "maturity amount", Decimal, row[3].replace(",", "")),
                 scheme=scheme[1].strip() if scheme else "", interest_payout=payout[1].strip() if payout else "",
                 nominee=nominee)
     check_deposit(d, name)
     return d
 
 
-def parse(path) -> list[Holding]:
-    with pdfplumber.open(path) as pdf:
-        return [holding_from_text("\n".join(p.extract_text() or "" for p in pdf.pages))]
-
-
-def deposits(path) -> list[Deposit]:
-    """Optional extra next to parse(): the receipt's terms (rate, tenure, scheme, payout) as a Deposit."""
+def _read(path, fn):
     name = Path(getattr(path, "name", path)).name
     with pdfplumber.open(path) as pdf:
         text = "\n".join(p.extract_text() or "" for p in pdf.pages)
     try:
-        return [deposit_from_text(text, name)]
+        return fn(text, name)
     except ValueError as e:
         raise ValueError(e if str(e).startswith(name) else f"{name}: {e}") from None
+
+
+def parse(path) -> list[Holding]:
+    return [_read(path, holding_from_text)]
+
+
+def deposits(path) -> list[Deposit]:
+    """Optional extra next to parse(): the receipt's terms (rate, tenure, scheme, payout) as a Deposit."""
+    return [_read(path, deposit_from_text)]

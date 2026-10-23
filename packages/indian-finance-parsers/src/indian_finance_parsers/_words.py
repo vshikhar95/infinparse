@@ -2,6 +2,15 @@
 import re
 
 
+def read(name, field, fn, *args):
+    """fn(*args), where a failure to parse raises "<name>: <field> is unreadable": the parser's own message would
+    quote the value, and exceptions end up in logs."""
+    try:
+        return fn(*args)
+    except (ValueError, ArithmeticError):
+        raise ValueError(f"{name}: {field} is unreadable") from None
+
+
 def norm(t):
     """Undo fake bold: some layouts print a label with every letter doubled ('SSTTAATTEE'); collapse a word only
     when every pair is doubled, so a genuine word like 'LOOK' is left alone."""

@@ -207,3 +207,28 @@ def test_inconsistent_figures_raise_without_amounts(old, new, field):
 def test_a_box_that_doesnt_add_up_raises():
     with pytest.raises(ValueError, match="^s.PDF: statement summary box"):
         hdfc.card_summary(_swap(OLD_PAGE, "12,500.00", "99.00"), "s.PDF")
+
+
+@pytest.mark.parametrize("page,old,new,field", [(OLD_PAGE, "25/01/2030", "99/99/2030", "due_date"),
+                                                (OLD_PAGE, "Date:05/01/2030", "Date:99/99/2030", "statement_date"),
+                                                (NEW_PAGE, "Jan,", "Xyz,", "statement_date")])
+def test_a_malformed_date_raises_without_the_value(page, old, new, field):
+    with pytest.raises(ValueError) as e:
+        hdfc.card_summary(_swap(page, old, new), "s.PDF")
+    assert str(e.value) in (f"s.PDF: {field} is unreadable", f"s.PDF: {field} not found") and "99" not in str(e.value)
+
+
+def test_a_comma_only_figure_is_not_an_amount():
+    with pytest.raises(ValueError, match="^s.PDF: credit_limit not found"):
+        hdfc.card_summary(_swap(OLD_PAGE, "5,00,000", "C,"), "s.PDF")
+
+
+def test_the_headers_total_dues_must_match_the_box_total():
+    def header(text):
+        return [dict(w, text=text) if w["text"] == "1,510.00" and w["top"] < 150 else w for w in OLD_PAGE]
+
+    hdfc.card_summary(header("1,510.50"), "s.PDF")  # ₹1 of rounding is fine (the box total is 1,510.00)
+    page = header("1,700.00")
+    with pytest.raises(ValueError, match="^s.PDF: total_due doesn't match the summary box") as e:
+        hdfc.card_summary(page, "s.PDF")
+    assert "1,700" not in str(e.value)

@@ -9,7 +9,7 @@ from decimal import Decimal
 
 import pdfplumber
 
-from indian_finance_parsers._words import below, label, norm
+from indian_finance_parsers._words import below, label, norm, read
 from indian_finance_parsers.checks import check_card_summary, check_totals
 from indian_finance_parsers.models import CardSummary, Txn
 
@@ -70,7 +70,7 @@ def _figures(words):
     lab = next((w for w in words if norm(w["text"]) == "Previous"), None)
     if lab is None:
         return None
-    vals = sorted((w for w in words if w["text"].startswith("`") and 0 < w["top"] - lab["top"] < 30
+    vals = sorted((w for w in words if re.fullmatch(FIG, w["text"]) and 0 < w["top"] - lab["top"] < 30
                    and w["x0"] > lab["x0"] - 30), key=lambda w: w["x0"])
     if len(vals) != 4:
         return None
@@ -87,9 +87,11 @@ def summary(path) -> CardSummary:
         return card_summary(pdf.pages[0].extract_words(), Path(getattr(path, "name", path)).name, text)
 
 
-DAY = r"[A-Za-z]+ \d\d?, \d{4}"
+MONTH = r"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)"
+DAY = rf"{MONTH} \d\d?, \d{{4}}"
 PERIOD = re.compile(rf"Statement period\s*:\s*({DAY}) to ({DAY})")
-MONEY = r"`[\d,]+\.\d\d(?: CR)?"
+FIG = r"`\d[\d,]*(?:\.\d\d)?"
+MONEY = r"`\d[\d,]*\.\d\d(?: CR)?"
 
 
 def _day(t):
@@ -98,7 +100,7 @@ def _day(t):
             return datetime.strptime(t, f).date()
         except ValueError:
             pass
-    raise ValueError("unreadable date")
+    raise ValueError
 
 
 def card_summary(words, name, text="") -> CardSummary:
@@ -117,26 +119,30 @@ def card_summary(words, name, text="") -> CardSummary:
 
     def money(field, *words_, pad=10):
         t = need(field, below(words, label(words, *words_), MONEY, pad=pad))
-        return (-1 if t.endswith(" CR") else 1) * Decimal(re.sub(r"[^\d.]", "", t))
+        return (-1 if t.endswith(" CR") else 1) * read(name, field, Decimal, re.sub(r"[^\d.]", "", t))
 
     total = money("total_due", "Total", "Amount", "due", pad=30)  # a trailing CR sits just past the label's width
     lab = label(words, "Credit", "Limit")
-    limits = sorted((w for w in words if lab and re.fullmatch(r"`[\d,]+(?:\.\d\d)?", w["text"])
+    limits = sorted((w for w in words if lab and re.fullmatch(FIG, w["text"])
                      and 0 < w["top"] - lab["top"] <= 30 and w["x0"] > lab["x0"] - 30), key=lambda w: w["x0"])
     if len(limits) != 4:
         raise ValueError(f"{name}: credit limits not found")
-    limit, avail, cash_limit, avail_cash = (Decimal(w["text"][1:].replace(",", "")) for w in limits)
+    limit, avail, cash_limit, avail_cash = (read(name, "credit limits", Decimal, w["text"][1:].replace(",", "")) for w in limits)
     prev, purchases, cash_adv, payments = row
     if abs(prev + purchases + cash_adv - payments - total) > 1:
         raise ValueError(f"{name}: total_due doesn't follow from the summary row (previous + purchases + cash "
                          "advances - payments)")
     period = PERIOD.search(text)
-    s = CardSummary(statement_date=_day(need("statement_date", below(words, label(words, "STATEMENT", "DATE"), DAY))),
-                    due_date=_day(need("due_date", below(words, label(words, "PAYMENT", "DUE", "DATE"), DAY))),
+    def day(field, t):
+        return read(name, field, _day, need(field, t))
+
+    s = CardSummary(statement_date=day("statement_date", below(words, label(words, "STATEMENT", "DATE"), DAY)),
+                    due_date=day("due_date", below(words, label(words, "PAYMENT", "DUE", "DATE"), DAY)),
                     total_due=total, minimum_due=money("minimum_due", "Minimum", "Amount", "due", pad=30),
                     previous_balance=prev, payments=payments, purchases=purchases, cash_advances=cash_adv,
                     credit_limit=limit, available_credit=avail, cash_limit=cash_limit, available_cash=avail_cash,
-                    period_start=_day(period[1]) if period else None, period_end=_day(period[2]) if period else None)
+                    period_start=day("period", period[1]) if period else None,
+                    period_end=day("period", period[2]) if period else None)
     check_card_summary(s, name)
     return s
 

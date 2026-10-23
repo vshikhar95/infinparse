@@ -86,3 +86,9 @@ def test_tenure_days_are_kept_and_checked():
     assert (d.tenure_months, d.tenure_days) == (12, 5)
     with pytest.raises(ValueError, match="tenure_months is inconsistent"):
         bajaj_fd.deposit_from_text(RECEIPT.replace("12M 0D 01-01-2027", "12M 5D 20-01-2027"))
+
+
+def test_unreadable_dates_raise_without_the_value():
+    with pytest.raises(ValueError) as e:
+        bajaj_fd.deposit_from_text(RECEIPT.replace("01-01-2027", "99-99-2027"), "r.pdf")
+    assert str(e.value) == "r.pdf: maturity date is unreadable"

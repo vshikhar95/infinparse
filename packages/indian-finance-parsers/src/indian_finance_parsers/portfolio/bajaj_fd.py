@@ -9,21 +9,18 @@ from pathlib import Path
 
 import pdfplumber
 
+from indian_finance_parsers._words import read
 from indian_finance_parsers.checks import check_deposit
 from indian_finance_parsers.models import Deposit, Holding
 
 D8 = r"(\d\d-\d\d-\d{4})"
-AMT = r"([\d,]+\.\d\d)"
+AMT = r"(\d[\d,]*\.\d\d)"
 # deposit date, scheme, "<months>M <days>D", maturity date, rate, deposit amount, interest amount, maturity amount
 ROW = re.compile(rf"{D8} ([A-Za-z][\w -]*?) (\d+)M (\d+)D {D8} (\d+(?:\.\d+)?)% {AMT} {AMT} {AMT}")
 
 
 def _d(s):
     return datetime.strptime(s, "%d-%m-%Y").date()
-
-
-def _money(s):
-    return Decimal(s.replace(",", ""))
 
 
 def deposit_from_text(text, name="receipt") -> Deposit:
@@ -35,11 +32,13 @@ def deposit_from_text(text, name="receipt") -> Deposit:
         raise ValueError("not a Bajaj Finance FD receipt (missing deposit number or the deposit row)")
     payout = re.search(r"Interest Payment \w+ ?: (.+)$", text, re.M)
     nominees = "; ".join(n for n in (m.strip() for m in re.findall(r"Nominee \d+ ?:[ \t]*(.*)$", text, re.M)) if n)
-    amount, interest, maturity = _money(row[7]), _money(row[8]), _money(row[9])
+    amount, interest, maturity = (read(name, f, Decimal, row[i].replace(",", ""))
+                                  for f, i in (("deposit amount", 7), ("interest amount", 8), ("maturity amount", 9)))
     if abs(amount + interest - maturity) > 1:
         raise ValueError(f"{name}: maturity_amount doesn't equal the deposit amount plus the interest amount")
-    d = Deposit(deposit_no=no[1], deposited=_d(row[1]), amount=amount, rate=Decimal(row[6]),
-                tenure_months=int(row[3]), matures=_d(row[5]), maturity_amount=maturity, scheme=row[2],
+    d = Deposit(deposit_no=no[1], deposited=read(name, "deposit date", _d, row[1]), amount=amount,
+                rate=read(name, "rate", Decimal, row[6]), tenure_months=int(row[3]),
+                matures=read(name, "maturity date", _d, row[5]), maturity_amount=maturity, scheme=row[2],
                 interest_payout=payout[1].strip() if payout else "",
                 nominee="NA" if nominees.upper() in ("NA", "N.A.", "NIL", "-") else nominees,  # NA = receipt says none
                 tenure_days=int(row[4]))

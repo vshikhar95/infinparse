@@ -164,3 +164,17 @@ def test_a_nil_statement_may_print_a_due_date_before_the_statement_date():
             for w in ICICI_PAGE]  # payments figure becomes 0.00 too, so previous 0 + 0 + 0 - 0 = 0
     page = [dict(w, text="01,") if w["text"] == "25," else w for w in page]
     assert icici.card_summary(page, "s.pdf").due_date == date(2031, 3, 1)
+
+
+def test_a_malformed_date_or_non_month_word_raises_without_the_value():
+    with pytest.raises(ValueError) as e:
+        icici.card_summary([dict(w, text="45,") if w["text"] == "25," else w for w in ICICI_PAGE], "s.pdf")
+    assert str(e.value) == "s.pdf: due_date is unreadable"
+    with pytest.raises(ValueError) as e:
+        icici.card_summary(ICICI_PAGE, "s.pdf", "Statement period : March 45, 2031 to March 05, 2031")
+    assert str(e.value) == "s.pdf: period is unreadable"
+
+
+def test_a_comma_only_limit_is_not_an_amount():
+    with pytest.raises(ValueError, match="^s.pdf: credit limits not found"):
+        icici.card_summary([dict(w, text="`,") if w["text"] == "`40,000" else w for w in ICICI_PAGE], "s.pdf")

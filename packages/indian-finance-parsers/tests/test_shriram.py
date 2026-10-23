@@ -116,3 +116,10 @@ def test_deposits_reads_a_pdf_and_names_the_file_on_failure(tmp_path):
 
 def test_payout_mid_line_is_read():
     assert shriram.deposit_from_text(FULL.replace("Interest Payment :", "Branch:XX Interest Payment :")).interest_payout == "Payable on Maturity"
+
+
+def test_unreadable_dates_raise_without_the_value():
+    for fn in (shriram.deposit_from_text, shriram.holding_from_text):
+        with pytest.raises(ValueError) as e:
+            fn(FULL.replace("01-01-2029", "99-99-2029"), "r.pdf")
+        assert str(e.value) == "r.pdf: maturity date is unreadable"
