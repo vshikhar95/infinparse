@@ -45,4 +45,9 @@ regexes = [
   '''^\*\* ?11$''',
   '''^444444444444$''',
   '''^222222222222222$''',
+  # tests/test_anonymise.py: the made-up person the anonymiser must scrub
+  '''^prakash\.t@okaxis$''',
+  '''^ABCPT1234Q$''',
+  '''^(\+91 )?98765 43210$''',
+  '''^HDFC0001234$''',
 ]

@@ -8,7 +8,8 @@ issues, pull requests and screenshots.
 ## Adding or fixing a parser
 
 1. Look at your file's structure with `python -m indian_finance_parsers.peek FILE` (needs the `excel` extra). It
-   prints the layout with every letter and digit masked.
+   prints the layout with personal data masked. If the masking hides labels you need, or the file is a PDF, use
+   [`tools/anonymise.py`](docs/anonymiser.md) instead: it keeps wording and swaps personal data for fakes.
 2. Write a small synthetic fixture with that structure and **invented** values: shops like `TESTMART`, card numbers
    starting `4111`, account numbers of zeros, round amounts, dates far from today. Don't reuse real issue prices,
    published rates, fund or product names, branch codes, cities or timestamps (see the fixture checklist in

@@ -7,3 +7,12 @@ packages/purchase-history-parsers/tests/fixtures/psn/subscription.html:payment-c
 packages/purchase-history-parsers/tests/fixtures/psn/subscription.html:masked-card-or-account:4
 packages/purchase-history-parsers/tests/test_playstation.py:aadhaar:41
 tests/test_pii_check.py:email-address:137
+# synthetic person in the anonymiser's test (made-up ids it must scrub)
+tests/test_anonymise.py:bank-account-number:16
+tests/test_anonymise.py:masked-card-or-account:13
+tests/test_anonymise.py:upi-id:17
+tests/test_anonymise.py:upi-id:36
+tests/test_anonymise.py:indian-mobile:17
+tests/test_anonymise.py:indian-mobile:36
+tests/test_anonymise.py:indian-pan:16
+tests/test_anonymise.py:indian-pan:35

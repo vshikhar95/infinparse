@@ -8,7 +8,7 @@ indian-finance-parsers = { workspace = true }
 purchase-history-parsers = { workspace = true }
 
 [dependency-groups]
-dev = ["pytest>=9.1.1", "fpdf2>=2.8", "indian-finance-parsers[all]", "purchase-history-parsers"]
+dev = ["pytest>=9.1.1", "fpdf2>=2.8", "faker>=40.43", "indian-finance-parsers[all]", "purchase-history-parsers"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "packages/indian-finance-parsers/tests", "packages/purchase-history-parsers/tests"]
