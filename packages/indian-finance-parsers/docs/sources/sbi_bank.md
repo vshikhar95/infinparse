@@ -28,3 +28,6 @@ The Excel file is password-protected; the download screen states the convention.
 - Wrapped details (a row with only the Details cell) are appended to the previous row.
 - The parser counts dated rows and raises `ValueError` if any were skipped before the footer, and checks that every
   running balance chains from the one before it.
+- When the export has its **Statement Summary** footer (Brought Forward, Dr/Cr Count, Total Debits/Credits, Closing
+  Balance), the rows must match it: totals, row counts, and the balances at both ends. That catches a dropped first or
+  last row, which the balance chain alone can't.

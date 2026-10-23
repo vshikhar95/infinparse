@@ -150,3 +150,30 @@ def test_sbi_bank_broken_balance_chain_raises(tmp_path):
     ])
     with pytest.raises(ValueError, match="balance chain"):
         sbi_bank.parse(p)
+
+
+SBI_SUMMARY = [["Statement Summary : 01-10-2026 To 02-10-2026"],
+               ["Brought Forward (₹)", "Dr Count", "Cr Count", "Total Debits (₹)", "Total Credits (₹)", "Closing Balance (₹)"]]
+SBI_ROWS = [["01/10/2026", "UPI/DR/TESTMART", "", "100.00", "", "900.00"],
+            ["02/10/2026", "SALARY FAKECO", "", "", "1,000.50", "1,900.50"]]
+
+
+def _sbi_with_summary(tmp_path, figures):
+    return _xlsx(tmp_path, SBI_HDR + SBI_ROWS + [[]] + SBI_SUMMARY + [figures])
+
+
+def test_sbi_bank_statement_summary_that_matches_passes(tmp_path):
+    p = _sbi_with_summary(tmp_path, ["1,000.00CR", "1", "1", "100.00", "1,000.50", "1,900.50CR"])
+    assert len(sbi_bank.parse(p)) == 2
+
+
+@pytest.mark.parametrize("figures,field", [
+    (["1,000.00CR", "1", "1", "100.00", "2,000.50", "1,900.50CR"], "credits"),       # a credit row missing
+    (["1,000.00CR", "2", "1", "100.00", "1,000.50", "1,900.50CR"], "debit rows"),     # count off
+    (["5,000.00CR", "1", "1", "100.00", "1,000.50", "1,900.50CR"], "opening balance"),  # first rows dropped
+    (["1,000.00CR", "1", "1", "100.00", "1,000.50", "9,900.50CR"], "closing balance"),  # last rows dropped
+])
+def test_sbi_bank_statement_summary_mismatch_rejects_the_file(tmp_path, figures, field):
+    with pytest.raises(ValueError, match=field) as e:
+        sbi_bank.parse(_sbi_with_summary(tmp_path, figures))
+    assert "1,000" not in str(e.value) and "900" not in str(e.value)

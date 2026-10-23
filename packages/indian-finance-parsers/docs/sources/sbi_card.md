@@ -26,3 +26,5 @@ None for the transaction-history download.
 - Wrapped descriptions spill above and below their row, so each fragment is assigned to the nearest dated row.
 - Zero-amount memo rows (for example notes about EMI instalments) are skipped.
 - A type other than `Debit` or `Credit` raises `ValueError`.
+- The transaction-history PDF prints no totals or balances, so the rows can't be reconciled against the file. A
+  dropped row can't be detected here; the bank's monthly statement is the stronger source if you need that.
