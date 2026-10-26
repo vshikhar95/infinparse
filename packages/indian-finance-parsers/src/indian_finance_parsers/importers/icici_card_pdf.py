@@ -13,8 +13,8 @@ from indian_finance_parsers._words import below, label, norm, read
 from indian_finance_parsers.checks import check_card_summary, check_totals
 from indian_finance_parsers.models import CardSummary, Txn
 
-# date, ref, description, [reward points], [foreign amount [currency]], INR amount, [CR]
-ROW = re.compile(r"^(\d\d/\d\d/\d{4}) (\d{8,}) (.*?)(?: -?\d+)?(?: [\d,]*\.\d+(?: [A-Z]{3})?)? ([\d,]+\.\d\d)( CR)?$")
+# date, ref, description, [reward points], [foreign amount [currency]], INR amount, [CR]  (groups: 1-3, cur=4, INR=5, CR=6)
+ROW = re.compile(r"^(\d\d/\d\d/\d{4}) (\d{8,}) (.*?)(?: -?\d+)?(?: [\d,]*\.\d+(?P<cur> [A-Z]{3})?)? ([\d,]+\.\d\d)( CR)?$")
 CARD = re.compile(r"^\d{4}X{6,}\d{4}$")  # add-on card section line, masked by ICICI
 
 
@@ -24,7 +24,7 @@ def parse(path):
         summary = _summary(pdf.pages[0])
     txns = rows_from_lines(lines)
     if summary and txns:
-        check_summary(summary, txns, Path(getattr(path, "name", path)).name)
+        check_summary(summary, txns, Path(getattr(path, "name", path)).name, foreign_refs(lines))
     return sorted(txns, key=lambda t: t.date)
 
 
@@ -39,10 +39,16 @@ def rows_from_lines(lines):
         m = ROW.match(line)
         if not m:
             continue
-        amount = Decimal(m[4].replace(",", ""))
+        amount = Decimal(m[5].replace(",", ""))
         txns.append(Txn(date=datetime.strptime(m[1], "%d/%m/%Y").date(),
-                        amount=amount if m[5] else -amount, description=m[3].strip(), notes=card, ref=m[2]))
+                        amount=amount if m[6] else -amount, description=m[3].strip(), notes=card, ref=m[2]))
     return txns
+
+
+def foreign_refs(lines):
+    """Refs of the rows that carry a foreign-currency amount, whether or not the amount stayed in the description."""
+    ms = (ROW.match(line.strip()) for line in lines)
+    return {m[2] for m in ms if m and (m["cur"] or FOREIGN_CR.search(m[3]))}
 
 
 def _table_text(page):
@@ -151,18 +157,18 @@ FOREIGN_CR = re.compile(r"\d [A-Z]{3}$")  # description of a foreign-currency ro
 MARKUP_SHARE = Decimal("0.05")  # forex markup 3.5% + 18% GST is 4.13% of the gross; a foreign refund row shows gross minus it
 
 
-def check_summary(summary, txns, name="statement"):
+def check_summary(summary, txns, name="statement", foreign_refs=()):
     """Rows must add up to the statement's own Purchases+Cash and Payments/Credits totals. One exception: a foreign
     refund row prints the amount net of the forex markup (the footer says markup and GST are "included in the
     transaction amount displayed"), while the summary counts the gross refund in Payments/Credits and the markup in
     Purchases/Charges. Both sides are then short by the same amount; that is accepted only when it is at most 5% of
-    the foreign-currency credit rows. ponytail: a coarse 5% bound, tighten if a false pass ever shows up."""
+    the foreign-currency credit rows (those whose ref is in foreign_refs). ponytail: a coarse 5% bound, tighten if a false pass ever shows up."""
     _prev, purchases, cash, credits = summary
     try:
         check_totals(txns, name, credits=credits, debits=purchases + cash)
     except ValueError:
         gap = credits - sum(t.amount for t in txns if t.amount > 0)
-        foreign = sum(t.amount for t in txns if t.amount > 0 and FOREIGN_CR.search(t.description))
+        foreign = sum(t.amount for t in txns if t.amount > 0 and t.ref in foreign_refs)
         if not (0 < gap <= foreign * MARKUP_SHARE and purchases + cash + sum(t.amount for t in txns if t.amount < 0) == gap):
             raise
 
