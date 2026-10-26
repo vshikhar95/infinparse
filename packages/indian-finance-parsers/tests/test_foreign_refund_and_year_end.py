@@ -34,7 +34,7 @@ def test_shortfall_on_one_side_only_still_raises():
 def test_equal_shortfall_without_a_foreign_refund_raises():
     domestic = [r for r in ROWS if r.ref != "12345678904"]
     with pytest.raises(ValueError, match="parsed"):
-        check(summary("6091.30", "4041.30"), domestic, icici.foreign_refs([l for ln in LINES if "12345678904" not in ln]))
+        check(summary("6091.30", "4041.30"), domestic, icici.foreign_refs([ln for ln in LINES if "12345678904" not in ln]))
 
 
 def test_decimal_foreign_amount_is_still_recognised():
