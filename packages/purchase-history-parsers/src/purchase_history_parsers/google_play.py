@@ -1,10 +1,10 @@
 """Google Play: saved 'Order history – Google Play' page (play.google.com/store/account/orderhistory)."""
 import hashlib
 import re
-from pathlib import Path
 from collections import Counter
 from datetime import datetime
 from decimal import Decimal
+from pathlib import Path
 
 from bs4 import BeautifulSoup
 

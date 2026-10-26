@@ -3,7 +3,6 @@ from datetime import date
 from decimal import Decimal as D
 
 import pytest
-
 from indian_finance_parsers.portfolio import shriram
 
 RECEIPT = """Name of Depositor : MR TEST PERSON Date of Issue : 01-01-2026

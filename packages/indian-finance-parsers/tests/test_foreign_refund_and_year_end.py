@@ -1,10 +1,11 @@
 """Tests for the ICICI foreign-refund summary check and the HDFC year-end refusal."""
 from decimal import Decimal as D
 from pathlib import Path
+from typing import ClassVar
 
 import pytest
-
-from indian_finance_parsers.importers import hdfc_card, icici_card_pdf as icici
+from indian_finance_parsers.importers import hdfc_card
+from indian_finance_parsers.importers import icici_card_pdf as icici
 
 FIX = Path(__file__).parent / "fixtures"
 LINES = (FIX / "icici_card_pdf_foreign_refund_lines.txt").read_text().splitlines()
@@ -15,7 +16,7 @@ FX = icici.foreign_refs(LINES)
 
 
 def summary(purchases, credits):
-    return [D("0"), D(purchases), D("0"), D(credits)]
+    return [D(0), D(purchases), D(0), D(credits)]
 
 
 def check(summ, rows=ROWS, fx=FX):
@@ -57,7 +58,7 @@ def test_year_end_statement_is_refused_not_misread(monkeypatch):
             return text
 
     class Pdf:
-        pages = [Page()]
+        pages: ClassVar = [Page()]
         def __enter__(self):
             return self
 

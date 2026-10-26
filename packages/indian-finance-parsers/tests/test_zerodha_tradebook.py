@@ -2,7 +2,6 @@ from datetime import date
 from decimal import Decimal as D
 
 import pytest
-
 from indian_finance_parsers.models import Trade
 from indian_finance_parsers.trades import zerodha_tradebook
 

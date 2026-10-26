@@ -5,7 +5,6 @@ import json
 from pathlib import Path
 
 from fpdf import FPDF
-
 from indian_finance_parsers.importers import sbi_card
 
 WORDS = json.loads((Path(__file__).parent / "fixtures" / "sbi_card_words.json").read_text())

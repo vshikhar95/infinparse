@@ -4,7 +4,6 @@ from decimal import Decimal as D
 from pathlib import Path
 
 import pytest
-
 from indian_finance_parsers.importers import hdfc_card as hdfc
 from indian_finance_parsers.models import Txn
 

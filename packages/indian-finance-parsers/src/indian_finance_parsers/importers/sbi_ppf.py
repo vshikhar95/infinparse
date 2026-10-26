@@ -7,6 +7,7 @@ import html
 import re
 from datetime import datetime
 from decimal import Decimal
+from itertools import pairwise
 from pathlib import Path
 
 from bs4 import BeautifulSoup
@@ -29,9 +30,9 @@ def parse(path) -> list[Txn]:
     raw = [(datetime.strptime(d, "%d/%m/%Y").date(), desc, _money(a), _money(b)) for d, desc, a, b in cells]
     if not raw:
         raise ValueError(f"{Path(path).name}: no PPF transaction rows found")
-    raw = sorted(reversed(raw), key=lambda t: t[0])  # oldest first, keeping same-day page order
+    raw = sorted(reversed(raw), key=lambda t: t[0])  # noqa: C414 - stable tie order matters: oldest first, same-day page order kept
     signed = [raw[0]]
-    for row, ((_, _, _, prev), (d, desc, amount, bal)) in enumerate(zip(raw, raw[1:], strict=False), start=2):
+    for row, ((_, _, _, prev), (d, desc, amount, bal)) in enumerate(pairwise(raw), start=2):
         if abs(bal - prev) != amount:
             raise ValueError(f"{Path(path).name}: PPF balance doesn't chain at row {row} (oldest first)")
         signed.append((d, desc, amount if bal >= prev else -amount, bal))

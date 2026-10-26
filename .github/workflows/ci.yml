@@ -88,7 +88,7 @@ jobs:
           version: ${{ env.UV_VERSION }}
           enable-cache: false
       - name: ruff
-        run: uvx ruff@0.14.2 check .
+        run: uvx ruff@0.17.2 check .
       - name: mypy
         run: uvx mypy@2.4.0
       - name: biome (exporters)

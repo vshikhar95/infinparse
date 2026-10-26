@@ -9,9 +9,7 @@ import unicodedata
 
 import pandas as pd
 
-VOCAB = set("""date value transaction txn tran posting description details narration particulars remarks
-remark merchant amount amt debit credit withdrawal deposit balance dr cr inr rs type mode ref reference
-no number chq cheque sr s id card points reward total opening closing statement category""".split())
+VOCAB = {"date", "value", "transaction", "txn", "tran", "posting", "description", "details", "narration", "particulars", "remarks", "remark", "merchant", "amount", "amt", "debit", "credit", "withdrawal", "deposit", "balance", "dr", "cr", "inr", "rs", "type", "mode", "ref", "reference", "no", "number", "chq", "cheque", "sr", "s", "id", "card", "points", "reward", "total", "opening", "closing", "statement", "category"}
 
 
 def mask(cell) -> str:
@@ -28,7 +26,7 @@ def read(path):
     if path.lower().endswith((".xls", ".xlsx")):
         try:
             return pd.read_excel(path, header=None, dtype=str)
-        except Exception:
+        except Exception:  # noqa: BLE001 - any read_excel failure falls back to HTML
             return pd.read_html(path, header=None)[0].astype(str)  # some banks ship HTML named .xls
     return pd.read_csv(path, header=None, dtype=str, sep=None, engine="python",
                        on_bad_lines="skip", encoding_errors="replace")

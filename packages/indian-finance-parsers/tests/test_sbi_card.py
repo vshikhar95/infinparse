@@ -4,7 +4,6 @@ from decimal import Decimal as D
 from pathlib import Path
 
 import pytest
-
 from indian_finance_parsers.importers import sbi_card as sbi
 
 WORDS = json.loads((Path(__file__).parent / "fixtures" / "sbi_card_words.json").read_text())

@@ -3,7 +3,6 @@ from datetime import date
 from decimal import Decimal as D
 
 import pytest
-
 from indian_finance_parsers.portfolio import bajaj_fd
 
 RECEIPT = """Bajaj Finance Limited Fixed Deposit Receipt

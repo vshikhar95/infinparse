@@ -15,14 +15,14 @@ def by_id():
 def test_delivered_order_is_a_purchase_with_total_date_and_items():
     p = by_id()["ORD1000000001"]
     assert (p.store, p.kind, p.amount, p.currency, p.date, p.raw_type) == (
-        "blinkit", "purchase", D("150"), "INR", date(2024, 3, 1), "DELIVERED")
+        "blinkit", "purchase", D(150), "INR", date(2024, 3, 1), "DELIVERED")
     assert p.items == "Test Milk 500ml | Test Bread ×2"
 
 
 def test_cancelled_and_null_total_orders_are_other():
     ps = by_id()
     assert (ps["ORD1000000002"].kind, ps["ORD1000000002"].raw_type) == ("other", "CANCELLED")
-    assert (ps["ORD1000000003"].kind, ps["ORD1000000003"].amount) == ("other", D("0"))
+    assert (ps["ORD1000000003"].kind, ps["ORD1000000003"].amount) == ("other", D(0))
 
 
 def test_order_without_a_date_is_skipped():

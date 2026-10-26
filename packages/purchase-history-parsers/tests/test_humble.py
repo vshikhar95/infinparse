@@ -28,7 +28,7 @@ def test_free_and_gifted_orders_are_kept_but_not_purchases():
 
 
 def test_inr_orders_keep_their_currency():
-    assert (by_id()["aaaa000000000005"].currency, by_id()["aaaa000000000005"].amount) == ("INR", D("899"))
+    assert (by_id()["aaaa000000000005"].currency, by_id()["aaaa000000000005"].amount) == ("INR", D(899))
 
 
 def test_free_order_without_currency_is_kept_with_empty_currency():

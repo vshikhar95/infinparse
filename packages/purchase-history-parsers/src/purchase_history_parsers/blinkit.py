@@ -16,7 +16,7 @@ def parse(path):
             continue
         total = Decimal(str(o["total"] or 0))
         items = " | ".join(i["name"] + (f" ×{i['qty']}" if i["qty"] > 1 else "") for i in o["items"])
-        payment = re.sub(r"[\d*•]+|\bX{2,}\b", "", re.sub(r"\([^)]*\)", "", o["payment"] or ""), flags=re.I)
+        payment = re.sub(r"[\d*•]+|\bX{2,}\b", "", re.sub(r"\([^)]*\)", "", o["payment"] or ""), flags=re.IGNORECASE)
         out.append(Purchase(
             store="blinkit", order_id=o["id"], date=date.fromisoformat(o["date"]), items=items,
             kind="purchase" if o["status"] == "DELIVERED" and total > 0 else "other", amount=total,

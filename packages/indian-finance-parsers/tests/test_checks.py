@@ -1,7 +1,6 @@
 from decimal import Decimal as D
 
 import pytest
-
 from indian_finance_parsers.checks import check_balance_chain
 
 
@@ -14,7 +13,7 @@ def three(txn):
 
 
 def test_balance_chain_returns_opening_balance(three):
-    assert check_balance_chain(three) == D("1000")
+    assert check_balance_chain(three) == D(1000)
 
 
 def test_broken_balance_chain_raises(txn):
@@ -27,7 +26,7 @@ def test_balance_chain_without_balances_is_none(txn):
     assert check_balance_chain([txn("2026-01-01", "-1", "card")]) is None
 
 
-from indian_finance_parsers.checks import check_totals  # noqa: E402
+from indian_finance_parsers.checks import check_totals
 
 
 def _rows(txn):

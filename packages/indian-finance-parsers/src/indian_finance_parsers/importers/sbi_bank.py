@@ -4,7 +4,6 @@ oldest first. Netbanking caps one export at 2,000 transactions, so long historie
 import re
 from datetime import datetime
 from decimal import Decimal
-
 from pathlib import Path
 
 from indian_finance_parsers.checks import check_balance_chain, check_totals

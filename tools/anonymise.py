@@ -54,7 +54,7 @@ def extract(name, data) -> str:
         import pandas as pd
         try:
             sheets = pd.read_excel(io.BytesIO(data), header=None, dtype=str, sheet_name=None)
-        except Exception:  # some banks ship HTML named .xls
+        except Exception:  # noqa: BLE001 - some banks ship HTML named .xls
             sheets = dict(enumerate(pd.read_html(io.BytesIO(data), header=None)))
         return "\n".join(f"--- sheet {k} ---\n{_table(df)}" for k, df in sheets.items())
     if ext in (".html", ".htm"):
@@ -182,7 +182,7 @@ def denylist():
         terms = [t.strip() for t in DENYLIST.read_text().splitlines()]
     except OSError:
         sys.exit(f"anonymise: {DENYLIST} not readable; refusing to run without the backstop")
-    out = [(t, re.compile(flexible(t), re.I)) for t in terms if t and not t.startswith("#")]
+    out = [(t, re.compile(flexible(t), re.IGNORECASE)) for t in terms if t and not t.startswith("#")]
     if not out:
         sys.exit(f"anonymise: {DENYLIST} has no terms; refusing to run without the backstop")
     return out
@@ -249,7 +249,7 @@ def ner_ollama(text, model=OLLAMA_MODEL):
         out = json.loads(json.loads(urllib.request.urlopen(req, timeout=600).read())["response"] or "{}")
         for kind, key in (("name", "names"), ("address", "addresses")):
             found += [(kind, s) for s in out.get(key, []) if isinstance(s, str) and s.strip()
-                      and re.search(flexible(s.strip()), chunk, re.I)]  # only spans really in the text
+                      and re.search(flexible(s.strip()), chunk, re.IGNORECASE)]  # only spans really in the text
     return found
 
 
@@ -283,10 +283,10 @@ def anonymise(text, ner="gliner", use_denylist=True, stats=None):
             # ponytail: a name made only of dictionary words ("Grace Hill") is skipped too; only the denylist catches it
         if kind == "name":
             name_tokens |= {t.lower() for t in toks if t.lower() not in words and len(t) > 2}
-        add(re.compile(flexible(s.strip()), re.I), fake.text, f"ner-{kind}")
+        add(re.compile(flexible(s.strip()), re.IGNORECASE), fake.text, f"ner-{kind}")
     if name_tokens:  # a name found once is replaced wherever it recurs, e.g. alone in a table
         add(re.compile(r"\b(?:" + "|".join(map(re.escape, sorted(name_tokens, key=len, reverse=True))) + r")\b",
-                       re.I), fake.text, "ner-name-token")
+                       re.IGNORECASE), fake.text, "ner-name-token")
     out, pos = [], 0
     for start, end, fn in sorted(spans, key=lambda s: (s[0], -s[1])):  # earliest, then longest, wins
         if start < pos:

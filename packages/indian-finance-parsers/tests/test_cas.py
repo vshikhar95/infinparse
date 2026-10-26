@@ -5,7 +5,6 @@ from decimal import Decimal
 import casparser
 import pytest
 from casparser.exceptions import IncorrectPasswordError
-
 from indian_finance_parsers.portfolio import cas
 
 CAS = {
