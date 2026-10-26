@@ -147,10 +147,24 @@ def card_summary(words, name, text="") -> CardSummary:
     return s
 
 
+FOREIGN_CR = re.compile(r"\d [A-Z]{3}$")  # description of a foreign-currency row ends with the currency ("... 25 USD")
+MARKUP_SHARE = Decimal("0.05")  # forex markup 3.5% + 18% GST is 4.13% of the gross; a foreign refund row shows gross minus it
+
+
 def check_summary(summary, txns, name="statement"):
-    """Rows must add up to the statement's own Purchases+Cash and Payments/Credits totals."""
+    """Rows must add up to the statement's own Purchases+Cash and Payments/Credits totals. One exception: a foreign
+    refund row prints the amount net of the forex markup (the footer says markup and GST are "included in the
+    transaction amount displayed"), while the summary counts the gross refund in Payments/Credits and the markup in
+    Purchases/Charges. Both sides are then short by the same amount; that is accepted only when it is at most 5% of
+    the foreign-currency credit rows. ponytail: a coarse 5% bound, tighten if a false pass ever shows up."""
     _prev, purchases, cash, credits = summary
-    check_totals(txns, name, credits=credits, debits=purchases + cash)
+    try:
+        check_totals(txns, name, credits=credits, debits=purchases + cash)
+    except ValueError:
+        gap = credits - sum(t.amount for t in txns if t.amount > 0)
+        foreign = sum(t.amount for t in txns if t.amount > 0 and FOREIGN_CR.search(t.description))
+        if not (0 < gap <= foreign * MARKUP_SHARE and purchases + cash + sum(t.amount for t in txns if t.amount < 0) == gap):
+            raise
 
 
 def meta(path):

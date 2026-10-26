@@ -38,3 +38,7 @@ before the statement date raises `ValueError` naming the file and field. `parse(
   `Date SerNo.` header.
 - The rows are checked against the statement summary (purchases + cash advances, payments + credits) and raise
   `ValueError` if they don't add up.
+- Known limit: a foreign-currency refund row prints net of the forex markup, while the summary counts the gross in
+  Payments/Credits and the markup in Purchases/Charges. Both sides are then short by the same amount, and that is
+  accepted only when it is at most 5% of the foreign-currency credit rows. A shortfall on one side only, or a larger
+  one, still raises `ValueError`.

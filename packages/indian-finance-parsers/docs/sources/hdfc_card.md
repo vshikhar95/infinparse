@@ -45,3 +45,6 @@ naming the file and field. `parse()` is unaffected.
   Payment/Credits, and parsed debits equal Purchase/Debits (plus Finance Charges when those are printed as rows). The
   box itself must add up (opening − credits + debits + charges = total due, within ₹1, since HDFC rounds the total).
   A mismatch, or a statement without a readable box, raises `ValueError` naming the file and field, never amounts.
+- Known limit: the annual "Year End Statement & Summary" is refused with a `ValueError` ("annual year-end summary…
+  not loaded"). Its rows are the twelve monthly statements' rows again, so loading both would double-count; load the
+  monthly statements only.
