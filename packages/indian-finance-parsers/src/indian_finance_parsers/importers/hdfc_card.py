@@ -3,7 +3,9 @@
 Two layouts: 2024 ("dd/mm/yyyy hh:mm:ss  desc  [NeuCoins]  1,234.56[Cr]"; payments and refunds print no time:
 "dd/mm/yyyy  desc  1,234.56Cr") and 2025+ ("dd/mm/yyyy| hh:mm  desc  [+] ₹ 1,234.56", '+' = credit). Rows are
 rebuilt from word positions; the NeuCoins column is dropped by position. The rows must match the statement's summary
-box (payments/credits and purchases/debits), so a dropped row rejects the file (see check_summary)."""
+box (payments/credits and purchases/debits), so a dropped row rejects the file (see check_summary).
+The annual "Year End Statement & Summary" is refused: its rows are the twelve monthly statements' rows again, worded
+differently, so loading both would double-count."""
 from pathlib import Path
 import re
 from datetime import datetime
@@ -31,6 +33,9 @@ def _rows(page):
 def parse(path):
     txns = []
     with pdfplumber.open(path) as pdf:
+        if "Year End Statement & Summary" in (pdf.pages[0].extract_text() or ""):
+            raise ValueError(f"{Path(getattr(path, 'name', path)).name}: annual year-end summary, not a monthly statement; "
+                             "its rows are the monthly statements' rows, so it is not loaded")
         for page in pdf.pages:
             coins_x = next((w["x0"] for w in page.extract_words() if w["text"].startswith("NeuCoins*")), None)
             txns += rows_from_words(_rows(page), coins_x)
