@@ -4,8 +4,8 @@
 #   Generic patterns always run: email addresses (noreply ones allowed), /Users/ or /home/ paths, 10+ digit runs
 #   (except test-card 4111…, 0000…, 1234567… and one-repeated-digit runs), and family-relationship words.
 #   DENYLIST: optional file of terms to reject (one per line, case-insensitive) — keep it outside this repo.
-#   PII_ALLOW_EMAILS: comma-separated addresses allowed in commit headers only (author lines, e.g. GitHub's PR merge
-#   commit), never in file content; CI takes it from a repository variable so the address stays out of the repo.
+#   PII_ALLOW_EMAILS: comma-separated addresses allowed in the "Author:" line of a commit header only
+#   (e.g. GitHub's PR merge commit), never in a message or file; CI takes it from a repository variable so the address stays out of the repo.
 # Binary files and file names with ':' or a tab can't be scanned, so they fail the gate too.
 # Prints "file:line: kind" (or "history <commit> file: kind") per hit, never the matched text. Exits 1 on any hit.
 set -euo pipefail
@@ -53,10 +53,14 @@ done < <(git log --all --numstat --format= | awk -F'\t' '$1 == "-" { print $3 }'
     low = tolower(text)
     kind = ""
     s = text
+    # an allowed address in the "Author: Name <address>" line of a commit header (not in a message, not in a file)
+    if (loc ~ /^history [0-9a-f]+ :$/ && match(text, /^Author: .*<[^<>]*>$/)) {
+      a = text; sub(/^.*</, "", a); sub(/>$/, "", a)
+      if (tolower(a) in ok) s = ""
+    }
     while (match(s, /[A-Za-z0-9][A-Za-z0-9._%+-]*@[A-Za-z0-9.-]+\.[A-Za-z][A-Za-z]+/)) {
       addr = tolower(substr(s, RSTART, RLENGTH)); s = substr(s, RSTART + RLENGTH)
       # noreply and the reserved example domains (RFC 2606) are fine; each address is judged on its own
-      if (addr in ok && loc ~ /^history [0-9a-f]+ :$/) continue  # a commit-header line (no file name)
       if (addr !~ /noreply/ && addr !~ /@example\.(com|org|net)$/) { kind = "email"; break }
     }
     if (kind != "") ;  # already a hit

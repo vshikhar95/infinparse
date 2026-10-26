@@ -88,6 +88,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
           PACKAGE: ${{ needs.build.outputs.package }}
+          PII_ALLOW_EMAILS: ${{ vars.PII_ALLOW_EMAILS }}
         run: |
           previous=$(git tag --list "$PACKAGE-v*" --sort=-v:refname | grep -vx "$TAG" | head -1)
           args=(-f "tag_name=$TAG"); [ -n "$previous" ] && args+=(-f "previous_tag_name=$previous")

@@ -134,6 +134,15 @@ def test_allowed_email_passes_in_commit_headers_only(repo, monkeypatch):
     assert check(repo).returncode == 1
 
 
+def test_allowed_email_with_leading_symbol_and_not_in_commit_message(repo, monkeypatch):
+    me = "+me" + "@" + "mail.invalid"
+    monkeypatch.setenv("PII_ALLOW_EMAILS", me)
+    git(repo, "-c", f"user.email={me}", "commit", "--allow-empty", "-qm", "c")
+    assert check(repo).returncode == 0
+    git(repo, "commit", "--allow-empty", "-qm", f"cc {me}")
+    assert check(repo).returncode == 1
+
+
 def test_names_with_spaces_are_reported_whole(repo):
     (repo / "my orders.zip").write_bytes(b"PK\x03\x04\x00")
     git(repo, "add", "-A")
