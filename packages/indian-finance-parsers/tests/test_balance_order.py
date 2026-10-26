@@ -2,7 +2,6 @@
 from datetime import date
 from decimal import Decimal as D
 
-
 from indian_finance_parsers.checks import order_by_balance
 from indian_finance_parsers.models import Txn
 

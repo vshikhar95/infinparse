@@ -4,9 +4,8 @@ from decimal import Decimal as D
 from pathlib import Path
 
 import pytest
-from openpyxl import Workbook
-
 from indian_finance_parsers.importers import icici_bank, icici_card, sbi_bank
+from openpyxl import Workbook
 
 FIX = Path(__file__).parent / "fixtures"
 

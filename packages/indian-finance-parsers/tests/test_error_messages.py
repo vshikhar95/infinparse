@@ -5,7 +5,6 @@ import json
 from pathlib import Path
 
 import pytest
-
 from indian_finance_parsers.checks import check_balance_chain
 from indian_finance_parsers.importers import sbi_card, sbi_ppf, zerodha_ledger
 

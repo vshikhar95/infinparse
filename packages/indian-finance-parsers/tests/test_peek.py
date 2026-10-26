@@ -20,5 +20,5 @@ def test_cli_masks_the_file_name(tmp_path):
     import sys
     p = tmp_path / "1234XXXXXXXX5678_ACME.csv"
     p.write_text("Date,Amount\n01/01/2026,10\n")
-    out = subprocess.run([sys.executable, "-m", "indian_finance_parsers.peek", str(p)], capture_output=True, text=True).stdout
+    out = subprocess.run([sys.executable, "-m", "indian_finance_parsers.peek", str(p)], capture_output=True, text=True, check=False).stdout
     assert "1234" not in out and "5678" not in out and "ACME" not in out

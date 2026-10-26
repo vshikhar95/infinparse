@@ -3,7 +3,6 @@ from datetime import date
 from decimal import Decimal as D
 
 import pytest
-
 from indian_finance_parsers.portfolio import sgb
 
 CERT = """Reserve Bank of India Print Date 20-Mar-2024

@@ -38,14 +38,14 @@ def test_items_of_one_order_become_one_purchase(tmp_path):
     p = _zip(tmp_path, [o("A1", 5, "Kettle", "1,299"), o("A1", 5, "Mug", "200")], [])
     [x] = amazon.parse(p)
     assert (x.store, x.order_id, x.date, x.items, x.kind, x.amount, x.currency, x.payment) == (
-        "amazon", "A1", date(2026, 1, 5), "Kettle | Mug", "purchase", D("1499"), "INR", "Visa - 1111")
+        "amazon", "A1", date(2026, 1, 5), "Kettle | Mug", "purchase", D(1499), "INR", "Visa - 1111")
     assert "SECRET" not in repr(x)
 
 
 def test_cancelled_items_are_dropped_and_fully_cancelled_orders_vanish(tmp_path):
     p = _zip(tmp_path, [o("A1", 5, "Kettle", "1299"), o("A1", 5, "Mug", "200", status="Cancelled"),
                         o("A2", 6, "Lamp", "999", status="Cancelled")], [])
-    assert [(x.order_id, x.items, x.amount) for x in amazon.parse(p)] == [("A1", "Kettle", D("1299"))]
+    assert [(x.order_id, x.items, x.amount) for x in amazon.parse(p)] == [("A1", "Kettle", D(1299))]
 
 
 def test_gift_card_orders_charge_no_real_account(tmp_path):
@@ -60,15 +60,15 @@ def test_completed_refunds_are_negative_rows_keyed_per_order(tmp_path):
     other = dict(refund, **{"Disbursement Type": "FATEReport"})
     rows = amazon.parse(_zip(tmp_path, [o("A1", 5, "Shoes", "2399")], [refund, refund, other]))
     refunds = [(x.order_id, x.kind, x.date, x.amount) for x in rows if x.kind == "refund"]
-    assert refunds == [("refund:A1:1", "refund", date(2026, 1, 20), D("-2399")),
-                       ("refund:A1:2", "refund", date(2026, 1, 20), D("-2399"))]
+    assert refunds == [("refund:A1:1", "refund", date(2026, 1, 20), D(-2399)),
+                       ("refund:A1:2", "refund", date(2026, 1, 20), D(-2399))]
 
 
 def test_refund_without_a_refund_date_uses_its_creation_date(tmp_path):
     refund = {"Order ID": "A1", "Refund Date": "Not Applicable", "Creation Date": "2026-01-18T10:00:00Z", "Currency": "INR",
               "Refund Amount": "10", "Disbursement Type": "Refund", "Reversal Status": "Completed", "Website": "Amazon.in"}
     rows = amazon.parse(_zip(tmp_path, [], [refund]))
-    assert [(x.date, x.amount) for x in rows] == [(date(2026, 1, 18), D("-10"))]
+    assert [(x.date, x.amount) for x in rows] == [(date(2026, 1, 18), D(-10))]
 
 
 def test_refund_without_an_amount_is_skipped(tmp_path):

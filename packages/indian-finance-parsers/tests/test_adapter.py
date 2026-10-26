@@ -1,7 +1,6 @@
 import sys
 
 import pytest
-
 from indian_finance_parsers import adapter, meta
 
 

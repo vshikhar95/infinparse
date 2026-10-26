@@ -3,7 +3,6 @@ import time
 import zipfile
 
 import pytest
-
 from purchase_history_parsers import amazon, google_play, playstation, steam
 
 N = 60_000

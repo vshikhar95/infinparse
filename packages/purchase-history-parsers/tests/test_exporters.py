@@ -7,7 +7,6 @@ from decimal import Decimal as D
 from pathlib import Path
 
 import pytest
-
 from purchase_history_parsers import blinkit, google_play, humble, steam
 
 EXPORTERS = Path(__file__).parent.parent / "exporters"
@@ -62,12 +61,14 @@ def test_steam_export_keeps_only_history_rows(tmp_path):
     assert "PERSONAL DATA" in out and "<script" not in out
     (tmp_path / "steam.html").write_text(out)
     [p] = steam.parse(tmp_path / "steam.html")
-    assert (p.order_id, p.items, p.amount) == ("111:purchase", "Fake Game", D("1500"))
+    assert (p.order_id, p.items, p.amount) == ("111:purchase", "Fake Game", D(1500))
 
 
 def test_google_play_export_keeps_only_order_lines(tmp_path):
-    page_text = "\n".join(["Account", "someone@example.com", "Order history", "Fake Game Pass", "1 Oct 2026", "₹1,299.00",
-                           "Demo App Pro", "Refunded", "19 Sept 2026", "₹99.00", "Help", "Signed in as x@example.com"])
+    page_text = (
+        "Account\nsomeone@example.com\nOrder history\nFake Game Pass\n1 Oct 2026\n₹1,299.00\n"
+        "Demo App Pro\nRefunded\n19 Sept 2026\n₹99.00\nHelp\nSigned in as x@example.com"
+    )
     script = f"""const {{ buildExport }} = require({json.dumps(str(EXPORTERS / "google_play.user.js"))});
         process.stdout.write(buildExport({json.dumps(page_text)}));"""
     out = node(script)
@@ -98,7 +99,7 @@ def test_blinkit_export_masks_card_and_is_what_the_parser_reads(tmp_path):
     (tmp_path / "blinkit_orders.json").write_text(out)
     [p] = blinkit.parse(tmp_path / "blinkit_orders.json")
     assert (p.order_id, p.date, p.amount, p.payment, p.items) == (
-        "ORD1", date(2024, 3, 1), D("150"), "Card", "Test Milk 500ml ×2")
+        "ORD1", date(2024, 3, 1), D(150), "Card", "Test Milk 500ml ×2")
 
 
 @pytest.mark.parametrize("script,host", [("steam.user.js", "store.steampowered.com"),

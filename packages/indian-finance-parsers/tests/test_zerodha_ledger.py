@@ -2,7 +2,6 @@ from datetime import date
 from decimal import Decimal as D
 
 import pytest
-
 from indian_finance_parsers.importers import zerodha_ledger
 
 LEDGER = """particulars,posting_date,cost_center,voucher_type,debit,credit,net_balance

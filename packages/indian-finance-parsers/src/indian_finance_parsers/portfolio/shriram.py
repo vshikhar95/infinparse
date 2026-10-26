@@ -44,7 +44,7 @@ def deposit_from_text(text, name="receipt") -> Deposit:
     """The receipt's terms as printed. Raises ValueError (naming `name` and the field) if they contradict each other."""
     no, row, amount, rate, nominee = _fields(text)
     scheme = re.search(r"Deposit No\. \S+ Scheme (.+)", text)
-    payout = re.search(r"Interest Frequency ?: (.+)$", text, re.M)  # "Interest Frequency : Payable on Maturity"
+    payout = re.search(r"Interest Frequency ?: (.+)$", text, re.MULTILINE)  # "Interest Frequency : Payable on Maturity"
     d = Deposit(deposit_no=no[1], deposited=read(name, "deposit date", _d, row[1]),
                 amount=read(name, "deposit amount", Decimal, amount[1].replace(",", "")),
                 rate=read(name, "rate", Decimal, rate[1]) if rate else None,

@@ -29,7 +29,7 @@ def commit(repo, name, text):
 
 
 def check(repo, *args):
-    return subprocess.run(["bash", str(SCRIPT), *args], cwd=repo, capture_output=True, text=True)
+    return subprocess.run(["bash", str(SCRIPT), *args], cwd=repo, capture_output=True, text=True, check=False)
 
 
 def test_clean_repo_passes(repo):
@@ -92,7 +92,7 @@ def test_unreadable_denylist_fails_loudly(repo):
 def test_relative_denylist_resolves_from_the_callers_directory(repo, tmp_path):
     commit(repo, "a.py", "# paid Zed back\n")
     (tmp_path / "deny.txt").write_text("zed\n")
-    r = subprocess.run(["bash", str(SCRIPT), "../deny.txt"], cwd=repo, capture_output=True, text=True)
+    r = subprocess.run(["bash", str(SCRIPT), "../deny.txt"], cwd=repo, capture_output=True, text=True, check=False)
     assert r.returncode == 1
 
 
@@ -135,5 +135,5 @@ def test_names_with_spaces_are_reported_whole(repo):
 def test_pr_text_from_the_environment_is_scanned(repo):
     commit(repo, "a.py", "x = 1\n")
     env = {**__import__("os").environ, "PII_TEXT": "Fix parser\n\nmy statement for someone@gmail.com"}
-    r = subprocess.run(["bash", str(SCRIPT)], cwd=repo, capture_output=True, text=True, env=env)
+    r = subprocess.run(["bash", str(SCRIPT)], cwd=repo, capture_output=True, text=True, env=env, check=False)
     assert r.returncode == 1 and "pr-text:3: email" in r.stdout and "someone" not in r.stdout

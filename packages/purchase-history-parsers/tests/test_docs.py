@@ -5,7 +5,7 @@ import pytest
 
 ROOT = Path(__file__).parent.parent
 SOURCES = ROOT / "docs" / "sources"
-HEADINGS = re.findall(r"^## .+$", (SOURCES / "_template.md").read_text(), re.M)
+HEADINGS = re.findall(r"^## .+$", (SOURCES / "_template.md").read_text(), re.MULTILINE)
 MODULES = sorted(p.stem for p in (ROOT / "src" / "purchase_history_parsers").glob("*.py")
                  if p.stem != "models" and not p.stem.startswith("_"))
 
@@ -14,7 +14,7 @@ MODULES = sorted(p.stem for p in (ROOT / "src" / "purchase_history_parsers").glo
 def test_every_parser_has_a_runbook_with_every_heading(module):
     doc = SOURCES / f"{module}.md"
     assert doc.exists(), f"missing docs/sources/{module}.md"
-    assert not [h for h in HEADINGS if not re.search(rf"^{re.escape(h)}$", doc.read_text(), re.M)]
+    assert not [h for h in HEADINGS if not re.search(rf"^{re.escape(h)}$", doc.read_text(), re.MULTILINE)]
 
 
 @pytest.mark.parametrize("module", MODULES)

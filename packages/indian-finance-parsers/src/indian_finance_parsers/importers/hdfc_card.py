@@ -6,10 +6,10 @@ rebuilt from word positions; the NeuCoins column is dropped by position. The row
 box (payments/credits and purchases/debits), so a dropped row rejects the file (see check_summary).
 The annual "Year End Statement & Summary" is refused: its rows are the twelve monthly statements' rows again, worded
 differently, so loading both would double-count."""
-from pathlib import Path
 import re
 from datetime import datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pdfplumber
 
@@ -109,11 +109,11 @@ NOTE = r"\(.*\)"  # "(Including Cash)" is printed between TOTAL CREDIT LIMIT and
 NEW_DATE = r"\d\d? [A-Za-z]{3}, \d{4}"
 AMT = r"[C₹`]?\d[\d,]*(?:\.\d\d)?"
 LABELS = {  # label words per figure: 2025+ layout, then 2024 layout
-    True: dict(credit_limit=("TOTAL", "CREDIT", "LIMIT"), available_credit=("AVAILABLE", "CREDIT", "LIMIT"),
-               available_cash=("AVAILABLE", "CASH", "LIMIT"), minimum_due=("MINIMUM", "DUE")),
-    False: dict(credit_limit=("Credit", "Limit"), available_credit=("Available", "Credit", "Limit"),
-                available_cash=("Available", "Cash", "Limit"), minimum_due=("Minimum", "Amount", "Due"),
-                total_due=("Total", "Dues"))}
+    True: {"credit_limit": ("TOTAL", "CREDIT", "LIMIT"), "available_credit": ("AVAILABLE", "CREDIT", "LIMIT"),
+           "available_cash": ("AVAILABLE", "CASH", "LIMIT"), "minimum_due": ("MINIMUM", "DUE")},
+    False: {"credit_limit": ("Credit", "Limit"), "available_credit": ("Available", "Credit", "Limit"),
+            "available_cash": ("Available", "Cash", "Limit"), "minimum_due": ("Minimum", "Amount", "Due"),
+            "total_due": ("Total", "Dues")}}
 
 
 def card_summary(words, name) -> CardSummary:

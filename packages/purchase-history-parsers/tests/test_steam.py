@@ -1,5 +1,4 @@
 import pytest
-
 from purchase_history_parsers import steam
 
 ROW = '''<tr class="wallet_table_row " onclick="location.href='x?transid={tid}'"><td class="wht_date">{d}</td>

@@ -2,7 +2,6 @@
 import time
 
 import pytest
-
 from indian_finance_parsers.importers import sbi_ppf
 from indian_finance_parsers.portfolio import bajaj_fd, sgb, shriram
 

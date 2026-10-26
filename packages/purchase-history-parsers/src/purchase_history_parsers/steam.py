@@ -1,10 +1,11 @@
 """Steam: saved 'Account > View purchase history' page (store.steampowered.com/account/history)."""
 import hashlib
 import re
-from pathlib import Path
 from collections import Counter
 from datetime import datetime
 from decimal import Decimal
+from pathlib import Path
+
 from bs4 import BeautifulSoup
 
 from purchase_history_parsers.models import Purchase

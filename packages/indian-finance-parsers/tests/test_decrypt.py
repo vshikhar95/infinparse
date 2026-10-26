@@ -6,7 +6,6 @@ from decimal import Decimal as D
 import pdfplumber
 import pikepdf
 import pytest
-
 from indian_finance_parsers.decrypt import decrypted
 
 

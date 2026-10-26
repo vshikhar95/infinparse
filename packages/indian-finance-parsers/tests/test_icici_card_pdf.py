@@ -3,7 +3,6 @@ from decimal import Decimal as D
 from pathlib import Path
 
 import pytest
-
 from indian_finance_parsers.importers import icici_card_pdf as icici
 
 LINES = (Path(__file__).parent / "fixtures" / "icici_card_pdf_lines.txt").read_text().splitlines()
@@ -39,16 +38,16 @@ def test_card_section_sets_notes_for_following_rows_only(rows):
 
 
 def test_check_totals_ok(rows):
-    icici.check_summary([D("0"), D("2833.56"), D("0"), D("5000.00")], rows)
+    icici.check_summary([D(0), D("2833.56"), D(0), D("5000.00")], rows)
 
 
 def test_check_totals_debit_mismatch(rows):
     with pytest.raises(ValueError, match="parsed debits don't match"):
-        icici.check_summary([D("0"), D("2833.55"), D("0"), D("5000.00")], rows)
+        icici.check_summary([D(0), D("2833.55"), D(0), D("5000.00")], rows)
 
 
 def test_check_totals_cash_advance_counts_as_debit(rows):
-    icici.check_summary([D("0"), D("2000.00"), D("833.56"), D("5000.00")], rows)
+    icici.check_summary([D(0), D("2000.00"), D("833.56"), D("5000.00")], rows)
 
 
 def _page(*items):

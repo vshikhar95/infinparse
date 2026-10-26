@@ -3,9 +3,9 @@ Filenames name the card product: '<card>_<n>_Retail_<Product>_NORM.pdf'; meta() 
 Rows: 'dd/mm/yyyy <ref> <description> <reward points> <amount>[ CR]'; add-on cards appear as section lines.
 The CSV export (icici_card.py) covers the same rows; a caller loading both should dedupe on date + amount."""
 import re
-from pathlib import Path
 from datetime import datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pdfplumber
 

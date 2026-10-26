@@ -1,7 +1,6 @@
 """Synthetic data only: every name, number and address here is made up."""
-import re
-
 import importlib.util
+import re
 import sys
 from pathlib import Path
 

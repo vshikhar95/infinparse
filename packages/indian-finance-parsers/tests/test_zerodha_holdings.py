@@ -3,9 +3,8 @@ from datetime import date
 from decimal import Decimal as D
 
 import pytest
-from openpyxl import Workbook
-
 from indian_finance_parsers.portfolio import zerodha_holdings
+from openpyxl import Workbook
 
 HDR = ["Symbol", "ISIN", "Sector", "Quantity Available", "Quantity Discrepant", "Quantity Long Term",
        "Quantity Pledged (Margin)", "Quantity Pledged (Loan)", "Average Price", "Previous Closing Price",
@@ -74,6 +73,7 @@ def test_no_header_raises_naming_only_the_file(tmp_path):
 
 def test_in_memory_file_without_a_printed_date_needs_as_of(tmp_path):
     import io
+
     from openpyxl import load_workbook
     p = _holdings_xlsx(tmp_path)
     wb = load_workbook(p)
