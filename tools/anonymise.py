@@ -54,7 +54,7 @@ def extract(name, data) -> str:
         import pandas as pd
         try:
             sheets = pd.read_excel(io.BytesIO(data), header=None, dtype=str, sheet_name=None)
-        except Exception:  # noqa: BLE001 - some banks ship HTML named .xls
+        except ValueError:  # some banks ship HTML named .xls
             sheets = dict(enumerate(pd.read_html(io.BytesIO(data), header=None)))
         return "\n".join(f"--- sheet {k} ---\n{_table(df)}" for k, df in sheets.items())
     if ext in (".html", ".htm"):
