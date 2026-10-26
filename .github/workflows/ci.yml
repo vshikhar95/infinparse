@@ -117,6 +117,7 @@ jobs:
 
             ${{ github.event.pull_request.body }}
           BASE_REF: ${{ github.base_ref }}
+          PII_ALLOW_EMAILS: ${{ vars.PII_ALLOW_EMAILS }}
         run: |
           gate=scripts/pii_check.sh
           if [ -n "$BASE_REF" ]; then git show "origin/$BASE_REF:scripts/pii_check.sh" > /tmp/pii_check.sh && gate=/tmp/pii_check.sh; fi

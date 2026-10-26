@@ -4,6 +4,8 @@
 #   Generic patterns always run: email addresses (noreply ones allowed), /Users/ or /home/ paths, 10+ digit runs
 #   (except test-card 4111…, 0000…, 1234567… and one-repeated-digit runs), and family-relationship words.
 #   DENYLIST: optional file of terms to reject (one per line, case-insensitive) — keep it outside this repo.
+#   PII_ALLOW_EMAILS: comma-separated addresses allowed in commit headers only (author lines, e.g. GitHub's PR merge
+#   commit), never in file content; CI takes it from a repository variable so the address stays out of the repo.
 # Binary files and file names with ':' or a tab can't be scanned, so they fail the gate too.
 # Prints "file:line: kind" (or "history <commit> file: kind") per hit, never the matched text. Exits 1 on any hit.
 set -euo pipefail
@@ -39,8 +41,9 @@ done < <(git log --all --numstat --format= | awk -F'\t' '$1 == "-" { print $3 }'
     f !~ self { print "history " c " " f ":\t" $0 }'
   # PR title and body (CI passes them in PII_TEXT through env, never interpolated into the command line)
   if [ -n "${PII_TEXT:-}" ]; then printf '%s\n' "$PII_TEXT" | awk '{ print "pr-text:" NR ":\t" $0 }'; fi
-} | awk -F'\t' -v self="$self" -v deny="$deny" '
+} | awk -F'\t' -v self="$self" -v deny="$deny" -v allow="${PII_ALLOW_EMAILS:-}" '
   BEGIN {
+    n = split(tolower(allow), al, /[ ,]+/); for (i = 1; i <= n; i++) if (al[i] != "") ok[al[i]]
     while ((getline t < deny) > 0) { gsub(/^[ \t]+|[ \t\r]+$/, "", t); if (t != "") terms[tolower(t)] }
   }
   {
@@ -53,6 +56,7 @@ done < <(git log --all --numstat --format= | awk -F'\t' '$1 == "-" { print $3 }'
     while (match(s, /[A-Za-z0-9][A-Za-z0-9._%+-]*@[A-Za-z0-9.-]+\.[A-Za-z][A-Za-z]+/)) {
       addr = tolower(substr(s, RSTART, RLENGTH)); s = substr(s, RSTART + RLENGTH)
       # noreply and the reserved example domains (RFC 2606) are fine; each address is judged on its own
+      if (addr in ok && loc ~ /^history [0-9a-f]+ :$/) continue  # a commit-header line (no file name)
       if (addr !~ /noreply/ && addr !~ /@example\.(com|org|net)$/) { kind = "email"; break }
     }
     if (kind != "") ;  # already a hit

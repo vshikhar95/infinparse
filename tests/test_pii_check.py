@@ -124,6 +124,16 @@ def test_noreply_exemption_is_per_address(repo):
     assert check(repo).returncode == 1
 
 
+def test_allowed_email_passes_in_commit_headers_only(repo, monkeypatch):
+    me = "me" + "@" + "mail.invalid"  # built here so this file holds no literal address
+    git(repo, "-c", f"user.email={me}", "commit", "--allow-empty", "-qm", "c")
+    assert check(repo).returncode == 1
+    monkeypatch.setenv("PII_ALLOW_EMAILS", "other" + "@" + "mail.invalid, " + me.upper())
+    assert check(repo).returncode == 0
+    commit(repo, "a.py", f"# {me}\n")  # in file content it still fails
+    assert check(repo).returncode == 1
+
+
 def test_names_with_spaces_are_reported_whole(repo):
     (repo / "my orders.zip").write_bytes(b"PK\x03\x04\x00")
     git(repo, "add", "-A")
